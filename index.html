@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T&T Transportes - App Corporativo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div id="app">
+    <section id="login-screen" class="screen active">
+      <div class="login-wrapper">
+        <div class="brand-header">
+          <div class="logo-card-container">
+            <img src="logo.jpeg" alt="T&T Transportes" class="logo">
+          </div>
+          <h1 class="brand-title">Bem-vindo, Colaborador!</h1>
+          <p class="brand-subtitle">Acesse sua conta para gerenciar rotinas e frotas.</p>
+        </div>
+
+        <div class="login-card">
+          <h2>Login de Acesso</h2>
+          <form id="login-form">
+            <div class="input-group">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" placeholder="colaborador@tt.com.br" required>
+            </div>
+            <div class="input-group">
+              <label for="password">Senha</label>
+              <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary">ENTRAR</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard-screen" class="screen">
+      <header class="header">
+        <button id="btn-hamburger" class="btn-hamburger" onclick="abrirMenuSidebar()" aria-label="Abrir menu de navegação">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+        
+        <img src="logo.jpeg" alt="T&T Transportes" class="logo-small">
+        
+        <div class="header-spacer"></div>
+      </header>
+
+      <div id="sidebar-overlay" class="sidebar-overlay" onclick="fecharMenuSidebar()"></div>
+      <aside id="sidebar-menu" class="sidebar-menu">
+        <div class="sidebar-header">
+          <div class="sidebar-user-info">
+            <strong id="sidebar-user-name">Usuário</strong>
+            <small id="sidebar-user-role">Colaborador</small>
+          </div>
+          <button id="btn-close-sidebar" class="btn-close" onclick="fecharMenuSidebar()" aria-label="Fechar menu">Fechar</button>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button onclick="mostrarSecao('mural')" class="sidebar-btn">
+             Mural de Avisos
+          </button>
+          <button onclick="mostrarSecao('marketplace')" class="sidebar-btn">
+             Marketplace / Feirinha
+          </button>
+          <button onclick="abrirReporteManutencao()" class="sidebar-btn btn-danger-soft">
+             Reportar Manutenção / SOS
+          </button>
+          <button onclick="mostrarSecao('refeicoes')" class="sidebar-btn">
+             Reservar Refeição
+          </button>
+        </nav>
+
+        <button id="btn-logout-sidebar" class="sidebar-btn btn-logout-main">
+          Sair da Conta
+        </button>
+      </aside>
+
+      <main class="content">
+        <div id="sec-mural" class="dashboard-section active-section">
+          <div class="welcome-box">
+            <h1 id="user-greeting">Olá</h1>
+            <p>Mural de Avisos Corporativos</p>
+          </div>
+
+          <div id="admin-panel" class="admin-panel hidden">
+            <div class="panel-title-wrapper">
+              <h3>Dashboard de Refeições do Dia</h3>
+            </div>
+            
+            <div class="dashboard-grid">
+              <div class="card-kpi">
+                <span class="kpi-label">Almoços Hoje</span>
+                <h2 id="total-almoco" class="kpi-value">0</h2>
+              </div>
+              <div class="card-kpi">
+                <span class="kpi-label">Jantas Hoje</span>
+                <h2 id="total-janta" class="kpi-value">0</h2>
+              </div>
+              <div class="card-kpi">
+                <span class="kpi-label">Total Refeições</span>
+                <h2 id="total-refeicoes" class="kpi-value">0</h2>
+              </div>
+              <div class="card-kpi card-kpi-highlight">
+                <span class="kpi-label">Custo Total (R$ 4,00)</span>
+                <h2 id="custo-total" class="kpi-value highlight-text">R$ 0,00</h2>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            
+            <div class="section-block">
+              <h3>Alertas de Manutenção e SOS da Frota</h3>
+              <p id="total-manutencoes" class="text-muted-small">Carregando chamados...</p>
+              <div id="manutencoes-list" class="manutencoes-list"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-block">
+              <h3>Lista de Presença do Refeitório</h3>
+              <p id="total-lunches" class="text-muted-small">Carregando...</p>
+              <ul id="lunch-list" class="lunch-list"></ul>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-block">
+              <h3>Novo Aviso Corporativo</h3>
+              <form id="notice-form" class="notice-form">
+                <input type="text" id="notice-title" placeholder="Título do aviso" required class="form-input">
+                <textarea id="notice-content" placeholder="Escreva a mensagem aqui..." required class="form-textarea"></textarea>
+                <button type="submit" class="btn btn-dark">Publicar Aviso</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="feed-header">
+            <h3 class="section-title">Avisos Recentes</h3>
+          </div>
+          <div id="notices-list" class="notices-list"></div>
+        </div>
+
+        <div id="sec-marketplace" class="dashboard-section hidden-section">
+          <div class="marketplace-header">
+            <div>
+              <h2>Feirinha de Colaboradores</h2>
+              <p>Compre, venda ou divulgue seus produtos/serviços</p>
+            </div>
+            <button onclick="abrirModalNovoAnuncioMarketplace()" class="btn btn-primary btn-sm">
+              + Criar Anúncio
+            </button>
+          </div>
+
+          <div id="marketplace-list" class="marketplace-grid">
+            </div>
+        </div>
+
+        <div id="sec-refeicoes" class="dashboard-section hidden-section">
+          <div class="welcome-box">
+            <h2>Reserva de Refeições & Cardápio</h2>
+            <p>Confira o cardápio da semana e faça a reserva do seu almoço ou janta.</p>
+          </div>
+
+          <div id="admin-menu-panel" class="admin-panel hidden">
+            <div class="panel-title-wrapper">
+              <h3>Cadastrar / Atualizar Cardápio (ADM)</h3>
+            </div>
+            
+            <form id="menu-form" class="notice-form">
+              <div class="input-group">
+                <label for="menu-date">Data do Cardápio</label>
+                <input type="date" id="menu-date" class="form-input" required>
+              </div>
+
+              <div class="input-group">
+                <label for="menu-main">Prato Principal</label>
+                <input type="text" id="menu-main" placeholder="Ex: Strogonoff de Frango" class="form-input" required>
+              </div>
+
+              <div class="input-group">
+                <label for="menu-side">Acompanhamento e Salada</label>
+                <input type="text" id="menu-side" placeholder="Ex: Arroz, feijão e salada verde" class="form-input" required>
+                <div class="input-group">
+                <label for="menu-side">Acompanhamento</label>
+               <input type="text" id="menu-side" placeholder="Ex: Arroz branco e feijão preto" class="form-input" required>
+              </div>
+
+              <div class="input-group">
+              <label for="menu-salad">Salada</label>
+               <input type="text" id="menu-salad" placeholder="Ex: Alface, tomate e cenoura ralada" class="form-input" required>
+              </div>
+              </div>
+
+              <div class="input-group">
+                <label for="menu-dessert">Sobremesa / Suco (Opcional)</label>
+                <input type="text" id="menu-dessert" placeholder="Ex: Pudim de leite" class="form-input">
+              </div>
+
+              <button type="submit" class="btn btn-dark">Salvar Cardápio do Dia</button>
+            </form>
+          </div>
+          <div class="divider"></div>
+
+          <div class="section-block">
+            <h3>Cardápio Geral</h3>
+            <div id="weekly-menu-list" class="dashboard-grid">
+              </div>
+          </div>
+        </div>
+      </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
