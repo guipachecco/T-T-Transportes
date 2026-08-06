@@ -1,0 +1,83 @@
+/* --- MARKETPLACE & GALERIA DE FOTOS --- */
+.marketplace-card {
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.mk-cover-container {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  background-color: #f1f5f9;
+}
+
+.mk-main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mk-photo-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(2px);
+}
+
+.mk-thumbnails-strip {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #f8fafc;
+  overflow-x: auto;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mk-thumb-img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.mk-thumb-img:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.mk-content {
+  padding: 12px;
+}
+
+.mk-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.mk-price-tag {
+  color: #0284c7;
+  font-size: 1.1rem;
+}
+
+.mk-description {
+  margin: 8px 0;
+  font-size: 0.875rem;
+  color: #475569;
+  word-break: break-word;
+}
