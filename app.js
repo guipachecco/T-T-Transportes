@@ -37,12 +37,22 @@ const PRECO_REFEICAO = 4.00;
 const PRAZO_RETIRADA_EPI_DIAS = 5;
 const INTERVALO_SOLICITACAO_EPI_DIAS = 60;
 const ESTOQUE_EPI_INICIAL = [
-  { id: 'polo-cinza-m', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'M', quantidade: 8, ordem: 10, icone: 'camisa' },
-  { id: 'polo-cinza-g', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G', quantidade: 25, ordem: 11, icone: 'camisa' },
-  { id: 'polo-cinza-g1', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G1', quantidade: 6, ordem: 12, icone: 'camisa' },
-  { id: 'polo-cinza-g2', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G2', quantidade: 7, ordem: 13, icone: 'camisa' },
-  { id: 'polo-cinza-g4', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G4', quantidade: 6, ordem: 14, icone: 'camisa' },
-  { id: 'polo-preta-gg', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'GG', quantidade: 6, ordem: 20, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-cinza-p', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'P', quantidade: 0, ordem: 10, icone: 'camisa' },
+  { id: 'polo-cinza-m', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'M', quantidade: 8, ordem: 11, icone: 'camisa' },
+  { id: 'polo-cinza-g', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G', quantidade: 25, ordem: 12, icone: 'camisa' },
+  { id: 'polo-cinza-gg', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'GG', quantidade: 0, ordem: 13, icone: 'camisa' },
+  { id: 'polo-cinza-g1', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G1', quantidade: 6, ordem: 14, icone: 'camisa' },
+  { id: 'polo-cinza-g2', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G2', quantidade: 7, ordem: 15, icone: 'camisa' },
+  { id: 'polo-cinza-g3', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G3', quantidade: 0, ordem: 16, icone: 'camisa' },
+  { id: 'polo-cinza-g4', produtoId: 'polo-cinza', nome: 'Camisa polo cinza', variacao: 'G4', quantidade: 6, ordem: 17, icone: 'camisa' },
+  { id: 'polo-preta-p', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'P', quantidade: 0, ordem: 20, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-preta-m', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'M', quantidade: 0, ordem: 21, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-preta-g', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'G', quantidade: 0, ordem: 22, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-preta-gg', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'GG', quantidade: 6, ordem: 23, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-preta-g1', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'G1', quantidade: 0, ordem: 24, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-preta-g2', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'G2', quantidade: 0, ordem: 25, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-preta-g3', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'G3', quantidade: 0, ordem: 26, icone: 'camisa', restricao: 'motorista-administrativo' },
+  { id: 'polo-preta-g4', produtoId: 'polo-preta', nome: 'Camisa polo preta', variacao: 'G4', quantidade: 0, ordem: 27, icone: 'camisa', restricao: 'motorista-administrativo' },
   { id: 'luva-unico', produtoId: 'luva', nome: 'Luva', variacao: 'Único', quantidade: 9, ordem: 30, icone: 'luva' },
   { id: 'protetor-solar-fps30', produtoId: 'protetor-solar', nome: 'Protetor solar FPS 30', variacao: 'Único', quantidade: 2, ordem: 40, icone: 'frasco' },
   { id: 'repelente-unico', produtoId: 'repelente', nome: 'Repelente', variacao: 'Único', quantidade: 6, ordem: 50, icone: 'frasco' },
@@ -52,8 +62,11 @@ const ESTOQUE_EPI_INICIAL = [
   { id: 'bota-39', produtoId: 'bota', nome: 'Bota de segurança', variacao: '39', quantidade: 3, ordem: 81, icone: 'bota' },
   { id: 'bota-40', produtoId: 'bota', nome: 'Bota de segurança', variacao: '40', quantidade: 4, ordem: 82, icone: 'bota' },
   { id: 'bota-41', produtoId: 'bota', nome: 'Bota de segurança', variacao: '41', quantidade: 1, ordem: 83, icone: 'bota' },
-  { id: 'bota-43', produtoId: 'bota', nome: 'Bota de segurança', variacao: '43', quantidade: 1, ordem: 84, icone: 'bota' },
-  { id: 'bota-44', produtoId: 'bota', nome: 'Bota de segurança', variacao: '44', quantidade: 2, ordem: 85, icone: 'bota' },
+  { id: 'bota-42', produtoId: 'bota', nome: 'Bota de segurança', variacao: '42', quantidade: 0, ordem: 84, icone: 'bota' },
+  { id: 'bota-43', produtoId: 'bota', nome: 'Bota de segurança', variacao: '43', quantidade: 1, ordem: 85, icone: 'bota' },
+  { id: 'bota-44', produtoId: 'bota', nome: 'Bota de segurança', variacao: '44', quantidade: 2, ordem: 86, icone: 'bota' },
+  { id: 'bota-45', produtoId: 'bota', nome: 'Bota de segurança', variacao: '45', quantidade: 0, ordem: 87, icone: 'bota' },
+  { id: 'bota-46', produtoId: 'bota', nome: 'Bota de segurança', variacao: '46', quantidade: 0, ordem: 88, icone: 'bota' },
   { id: 'capa-chuva-unico', produtoId: 'capa-chuva', nome: 'Capa de chuva', variacao: 'Único', quantidade: 4, ordem: 90, icone: 'capa' },
   { id: 'colete-unico', produtoId: 'colete', nome: 'Colete', variacao: 'Único', quantidade: 3, ordem: 100, icone: 'colete' },
   { id: 'capacete-unico', produtoId: 'capacete', nome: 'Capacete', variacao: 'Único', quantidade: 3, ordem: 110, icone: 'capacete' }
@@ -126,6 +139,8 @@ const epiSubmitRequest = document.getElementById("epi-submit-request");
 const epiMyRequestsList = document.getElementById("epi-my-requests-list");
 const epiMovementForm = document.getElementById("epi-movement-form");
 const epiMovementItem = document.getElementById("epi-movement-item");
+const epiMovementVariantWrapper = document.getElementById("epi-movement-variant-wrapper");
+const epiMovementVariant = document.getElementById("epi-movement-variant");
 const epiMovementType = document.getElementById("epi-movement-type");
 const epiMovementQuantity = document.getElementById("epi-movement-quantity");
 const epiMovementReason = document.getElementById("epi-movement-reason");
@@ -1557,42 +1572,54 @@ function ordenarRegistrosEpi(registros) {
   );
 }
 
-function obterProximaSolicitacaoEpi() {
-  const dataPerfil = obterDataOpcionalEpi(currentUserData?.proximaSolicitacaoEpiEm);
-  const ultimaSolicitacao = ordenarRegistrosEpi(minhasSolicitacoesEpiCache)[0];
-  const dataUltima = obterDataOpcionalEpi(ultimaSolicitacao?.criadoEm);
-  const dataPeloHistorico = dataUltima
-    ? adicionarDiasEpi(dataUltima, INTERVALO_SOLICITACAO_EPI_DIAS)
-    : null;
-
-  return [dataPerfil, dataPeloHistorico]
-    .filter(Boolean)
-    .sort((a, b) => b.getTime() - a.getTime())[0] || null;
-}
-
 function obterBloqueioSolicitacaoEpi() {
-  const proximaData = obterProximaSolicitacaoEpi();
+  const solicitacaoAtiva = ordenarRegistrosEpi(minhasSolicitacoesEpiCache)
+    .find((solicitacao) => ['pendente', 'aprovado'].includes(solicitacao.status));
+
+  if (solicitacaoAtiva) {
+    return { tipo: 'solicitacao-ativa', solicitacao: solicitacaoAtiva };
+  }
+
+  const ultimaRetirada = obterDataOpcionalEpi(currentUserData?.ultimaRetiradaEpiEm);
+  const proximaData = ultimaRetirada
+    ? obterDataOpcionalEpi(currentUserData?.proximaSolicitacaoEpiEm)
+    : null;
   if (!proximaData || proximaData.getTime() <= Date.now()) return null;
-  return proximaData;
+  return { tipo: 'prazo', data: proximaData };
 }
 
 function renderizarBloqueioSolicitacaoEpi() {
   if (!epiRequestLock || !epiSubmitRequest) return;
-  const proximaData = obterBloqueioSolicitacaoEpi();
-  epiRequestLock.classList.toggle('hidden', !proximaData);
+  const bloqueio = obterBloqueioSolicitacaoEpi();
+  epiRequestLock.classList.toggle('hidden', !bloqueio);
 
-  if (proximaData) {
+  if (bloqueio) {
+    const aguardandoRetirada = bloqueio.tipo === 'solicitacao-ativa' && bloqueio.solicitacao.status === 'aprovado';
+    const prazoRetirada = aguardandoRetirada
+      ? obterDataOpcionalEpi(bloqueio.solicitacao.prazoRetirada)
+      : null;
+    const titulo = bloqueio.tipo === 'prazo'
+      ? 'Intervalo entre retiradas'
+      : (aguardandoRetirada ? 'Pedido aguardando retirada' : 'Pedido em análise');
+    const mensagem = bloqueio.tipo === 'prazo'
+      ? `Você poderá enviar um novo pedido a partir de <b>${formatarDataHoraEpi(bloqueio.data)}</b>.`
+      : (aguardandoRetirada
+        ? `Seu pedido foi aprovado e deve ser retirado${prazoRetirada ? ` até <b>${formatarDataHoraEpi(prazoRetirada)}</b>` : ''}.`
+        : 'Você já possui uma solicitação aguardando a análise do administrador.');
+
     epiRequestLock.innerHTML = `
       <span class="epi-request-lock-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </span>
       <div>
-        <strong>Intervalo entre solicitações</strong>
-        <p>Você poderá enviar um novo pedido a partir de <b>${formatarDataHoraEpi(proximaData)}</b>.</p>
+        <strong>${titulo}</strong>
+        <p>${mensagem}</p>
       </div>
     `;
     epiSubmitRequest.disabled = true;
-    epiSubmitRequest.textContent = 'Aguardando prazo de 60 dias';
+    epiSubmitRequest.textContent = bloqueio.tipo === 'prazo'
+      ? 'Aguardando prazo de 60 dias'
+      : 'Solicitação em andamento';
   } else {
     epiSubmitRequest.disabled = false;
     epiSubmitRequest.textContent = 'Enviar solicitação';
@@ -1630,21 +1657,31 @@ async function garantirEstoqueInicialEpi() {
   try {
     const snapshot = await getDocs(collection(db, 'estoque_epi'));
     const idsExistentes = new Set(snapshot.docs.map((docSnap) => docSnap.id));
-    const itensFaltantes = ESTOQUE_EPI_INICIAL.filter((item) => !idsExistentes.has(item.id));
 
-    await Promise.all(itensFaltantes.map((item) => setDoc(doc(db, 'estoque_epi', item.id), {
-      produtoId: item.produtoId,
-      nome: item.nome,
-      variacao: item.variacao,
-      quantidade: item.quantidade,
-      estoqueInicial: item.quantidade,
-      ordem: item.ordem,
-      icone: item.icone,
-      restricao: item.restricao || null,
-      criadoEm: serverTimestamp(),
-      atualizadoEm: serverTimestamp(),
-      inicializadoPor: currentUserData.uid
-    })));
+    await Promise.all(ESTOQUE_EPI_INICIAL.map((item) => {
+      const referencia = doc(db, 'estoque_epi', item.id);
+      const dadosCatalogo = {
+        produtoId: item.produtoId,
+        nome: item.nome,
+        variacao: item.variacao,
+        ordem: item.ordem,
+        icone: item.icone,
+        restricao: item.restricao || null,
+        atualizadoEm: serverTimestamp()
+      };
+
+      if (idsExistentes.has(item.id)) {
+        return setDoc(referencia, dadosCatalogo, { merge: true });
+      }
+
+      return setDoc(referencia, {
+        ...dadosCatalogo,
+        quantidade: item.quantidade,
+        estoqueInicial: item.quantidade,
+        criadoEm: serverTimestamp(),
+        inicializadoPor: currentUserData.uid
+      });
+    }));
   } catch (error) {
     console.error('Erro ao preparar estoque inicial de EPIs:', error);
     if (estoqueEpiCache.length === 0) {
@@ -1810,9 +1847,12 @@ window.selecionarVariacaoEpi = (produtoId, itemId) => {
 };
 
 window.adicionarProdutoEpi = (produtoId) => {
-  const proximaSolicitacao = obterBloqueioSolicitacaoEpi();
-  if (proximaSolicitacao) {
-    Toast.fire({ icon: 'warning', title: `Novo pedido disponível em ${formatarDataHoraEpi(proximaSolicitacao)}.` });
+  const bloqueio = obterBloqueioSolicitacaoEpi();
+  if (bloqueio) {
+    const mensagem = bloqueio.tipo === 'prazo'
+      ? `Novo pedido disponível em ${formatarDataHoraEpi(bloqueio.data)}.`
+      : 'Você já possui uma solicitação em andamento.';
+    Toast.fire({ icon: 'warning', title: mensagem });
     return;
   }
 
@@ -1909,12 +1949,15 @@ function limparCarrinhoEpi() {
 }
 
 async function enviarSolicitacaoEpi() {
-  const proximaSolicitacaoAtual = obterBloqueioSolicitacaoEpi();
-  if (proximaSolicitacaoAtual) {
+  const bloqueioAtual = obterBloqueioSolicitacaoEpi();
+  if (bloqueioAtual) {
+    const prazoAtivo = bloqueioAtual.tipo === 'prazo';
     Swal.fire({
       icon: 'info',
-      title: 'Intervalo entre solicitações',
-      text: `Você poderá enviar um novo pedido a partir de ${formatarDataHoraEpi(proximaSolicitacaoAtual)}.`,
+      title: prazoAtivo ? 'Intervalo entre retiradas' : 'Solicitação em andamento',
+      text: prazoAtivo
+        ? `Você poderá enviar um novo pedido a partir de ${formatarDataHoraEpi(bloqueioAtual.data)}.`
+        : 'Aguarde a análise ou a retirada do pedido atual antes de fazer uma nova solicitação.',
       confirmButtonColor: '#0F172A'
     });
     return;
@@ -1970,13 +2013,16 @@ async function enviarSolicitacaoEpi() {
     if (!currentUserDocRef) throw new Error('Perfil do colaborador não encontrado.');
 
     const referenciaSolicitacao = doc(collection(db, 'solicitacoes_epi'));
-    const dataProximaSolicitacao = adicionarDiasEpi(new Date(), INTERVALO_SOLICITACAO_EPI_DIAS);
 
     await runTransaction(db, async (transacao) => {
       const snapshotPerfil = await transacao.get(currentUserDocRef);
       if (!snapshotPerfil.exists()) throw new Error('Perfil do colaborador não encontrado.');
 
-      const proximaDataRegistrada = obterDataOpcionalEpi(snapshotPerfil.data().proximaSolicitacaoEpiEm);
+      const dadosPerfil = snapshotPerfil.data();
+      const ultimaRetiradaRegistrada = obterDataOpcionalEpi(dadosPerfil.ultimaRetiradaEpiEm);
+      const proximaDataRegistrada = ultimaRetiradaRegistrada
+        ? obterDataOpcionalEpi(dadosPerfil.proximaSolicitacaoEpiEm)
+        : null;
       if (proximaDataRegistrada && proximaDataRegistrada.getTime() > Date.now()) {
         throw new Error(`Um novo pedido estará disponível em ${formatarDataHoraEpi(proximaDataRegistrada)}.`);
       }
@@ -1993,24 +2039,18 @@ async function enviarSolicitacaoEpi() {
         criadoEm: serverTimestamp(),
         atualizadoEm: serverTimestamp()
       });
-
-      transacao.set(currentUserDocRef, {
-        cargoEpi: cargo,
-        ultimaSolicitacaoEpiEm: serverTimestamp(),
-        proximaSolicitacaoEpiEm: dataProximaSolicitacao
-      }, { merge: true });
     });
 
+    await setDoc(currentUserDocRef, { cargoEpi: cargo }, { merge: true });
+
     currentUserData.cargoEpi = cargo;
-    currentUserData.ultimaSolicitacaoEpiEm = new Date();
-    currentUserData.proximaSolicitacaoEpiEm = dataProximaSolicitacao;
 
     limparCarrinhoEpi();
     renderizarBloqueioSolicitacaoEpi();
     Swal.fire({
       icon: 'success',
       title: 'Solicitação enviada',
-      text: 'O administrador analisará o pedido. Uma nova solicitação poderá ser feita após 60 dias.',
+      text: 'O administrador analisará o pedido. O prazo de 60 dias começará somente quando a retirada for confirmada.',
       confirmButtonColor: '#0F172A'
     });
   } catch (error) {
@@ -2135,11 +2175,36 @@ window.cancelarSolicitacaoEpi = async (solicitacaoId) => {
 function preencherSelectMovimentoEpi() {
   if (!epiMovementItem) return;
   const valorAtual = epiMovementItem.value;
-  epiMovementItem.innerHTML = '<option value="">Selecione um item</option>' + estoqueEpiCache.map((item) => {
-    const variacao = item.variacao === 'Único' ? '' : ` — ${item.variacao}`;
-    return `<option value="${item.id}">${escaparHtml(item.nome)}${escaparHtml(variacao)} (${item.quantidade})</option>`;
+  const grupos = agruparEstoqueEpi();
+  epiMovementItem.innerHTML = '<option value="">Selecione um equipamento</option>' + grupos.map((grupo) => {
+    const total = grupo.itens.reduce((soma, item) => soma + item.quantidade, 0);
+    return `<option value="${grupo.produtoId}">${escaparHtml(grupo.nome)} (${total} no estoque)</option>`;
   }).join('');
-  if (estoqueEpiCache.some((item) => item.id === valorAtual)) epiMovementItem.value = valorAtual;
+  if (grupos.some((grupo) => grupo.produtoId === valorAtual)) epiMovementItem.value = valorAtual;
+  sincronizarVariacoesMovimentoEpi();
+}
+
+function sincronizarVariacoesMovimentoEpi() {
+  if (!epiMovementItem || !epiMovementVariant || !epiMovementVariantWrapper) return;
+
+  const grupo = agruparEstoqueEpi().find((item) => item.produtoId === epiMovementItem.value);
+  const valorAtual = epiMovementVariant.value;
+  const temTamanho = Boolean(grupo?.itens.some((item) => item.variacao !== 'Único'));
+
+  epiMovementVariantWrapper.classList.toggle('hidden', !temTamanho);
+  epiMovementVariant.required = temTamanho;
+
+  if (!grupo || !temTamanho) {
+    epiMovementVariant.innerHTML = '<option value="">Não se aplica</option>';
+    epiMovementVariant.value = '';
+    return;
+  }
+
+  epiMovementVariant.innerHTML = '<option value="">Selecione o tamanho</option>' + grupo.itens.map((item) => (
+    `<option value="${item.id}">Tamanho ${escaparHtml(item.variacao)} (${item.quantidade} no estoque)</option>`
+  )).join('');
+
+  if (grupo.itens.some((item) => item.id === valorAtual)) epiMovementVariant.value = valorAtual;
 }
 
 function atualizarKpisEpiAdmin() {
@@ -2185,7 +2250,9 @@ async function registrarMovimentacaoEpi(event) {
   event.preventDefault();
   if (currentUserData?.role !== 'admin') return;
 
-  const itemId = epiMovementItem.value;
+  const grupo = agruparEstoqueEpi().find((item) => item.produtoId === epiMovementItem.value);
+  const temTamanho = Boolean(grupo?.itens.some((item) => item.variacao !== 'Único'));
+  const itemId = temTamanho ? epiMovementVariant?.value : grupo?.itens[0]?.id;
   const tipo = epiMovementType.value;
   const quantidade = Number(epiMovementQuantity.value);
   const motivo = epiMovementReason.value.trim();
@@ -2231,6 +2298,7 @@ async function registrarMovimentacaoEpi(event) {
 
     epiMovementForm.reset();
     epiMovementQuantity.value = 1;
+    sincronizarVariacoesMovimentoEpi();
     Toast.fire({ icon: 'success', title: `${tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada com sucesso.` });
   } catch (error) {
     Swal.fire({ icon: 'error', title: 'Movimentação não realizada', text: error.message, confirmButtonColor: '#0F172A' });
@@ -2281,7 +2349,7 @@ function renderizarSolicitacoesEpiAdmin() {
         ` : ''}
         ${solicitacao.status === 'aprovado' && prazoRetirada && prazoRetirada.getTime() > Date.now() ? `
           <div class="epi-admin-request-actions single">
-            <button type="button" class="epi-withdraw-button" onclick="confirmarRetiradaEpi('${solicitacao.id}')">Confirmar retirada</button>
+            <button type="button" class="epi-withdraw-button" onclick="confirmarRetiradaEpi('${solicitacao.id}')">Retirado</button>
           </div>
         ` : ''}
       </article>
@@ -2393,6 +2461,7 @@ window.confirmarRetiradaEpi = async (solicitacaoId) => {
   if (!confirmacao.isConfirmed) return;
 
   try {
+    const proximaSolicitacao = adicionarDiasEpi(new Date(), INTERVALO_SOLICITACAO_EPI_DIAS);
     await runTransaction(db, async (transacao) => {
       const referencia = doc(db, 'solicitacoes_epi', solicitacaoId);
       const snapshot = await transacao.get(referencia);
@@ -2412,9 +2481,14 @@ window.confirmarRetiradaEpi = async (solicitacaoId) => {
         retiradaConfirmadaPorNome: currentUserData.nome || currentUserData.email,
         atualizadoEm: serverTimestamp()
       });
+
+      transacao.set(doc(db, 'usuarios', dados.colaboradorUid), {
+        ultimaRetiradaEpiEm: serverTimestamp(),
+        proximaSolicitacaoEpiEm: proximaSolicitacao
+      }, { merge: true });
     });
 
-    Toast.fire({ icon: 'success', title: 'Retirada confirmada.' });
+    Toast.fire({ icon: 'success', title: 'Retirada confirmada. Novo pedido liberado em 60 dias.' });
   } catch (error) {
     Swal.fire({ icon: 'error', title: 'Não foi possível confirmar', text: error.message, confirmButtonColor: '#0F172A' });
   }
@@ -2602,6 +2676,7 @@ if (epiUserRole) {
 
 if (epiClearCart) epiClearCart.addEventListener('click', limparCarrinhoEpi);
 if (epiSubmitRequest) epiSubmitRequest.addEventListener('click', enviarSolicitacaoEpi);
+if (epiMovementItem) epiMovementItem.addEventListener('change', sincronizarVariacoesMovimentoEpi);
 if (epiMovementForm) epiMovementForm.addEventListener('submit', registrarMovimentacaoEpi);
 if (epiRequestStatusFilter) epiRequestStatusFilter.addEventListener('change', renderizarSolicitacoesEpiAdmin);
 

@@ -17,23 +17,14 @@ service cloud.firestore {
     }
 
     function intervaloSolicitacaoEpiDisponivel() {
-      let perfilAntes = get(
-        /databases/$(database)/documents/usuarios/$(request.auth.uid)
-      ).data;
-      let perfilDepois = getAfter(
+      let perfil = get(
         /databases/$(database)/documents/usuarios/$(request.auth.uid)
       ).data;
 
-      return (
-        !perfilAntes.keys().hasAny(['proximaSolicitacaoEpiEm']) ||
-        perfilAntes.proximaSolicitacaoEpiEm <= request.time
-      ) &&
-      perfilDepois.keys().hasAll([
-        'ultimaSolicitacaoEpiEm',
+      return !perfil.keys().hasAll([
+        'ultimaRetiradaEpiEm',
         'proximaSolicitacaoEpiEm'
-      ]) &&
-      perfilDepois.ultimaSolicitacaoEpiEm == request.time &&
-      perfilDepois.proximaSolicitacaoEpiEm >= request.time + duration.value(59, 'd');
+      ]) || perfil.proximaSolicitacaoEpiEm <= request.time;
     }
 
     // Perfis: o administrador gerencia tudo. O colaborador pode alterar somente
@@ -53,31 +44,12 @@ service cloud.firestore {
           !request.resource.data.keys().hasAny(['cargoEpi']) ||
           request.resource.data.cargoEpi in ['motorista', 'administrativo', 'operacional']
         ) &&
-        (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'fcmToken',
-            'cargoEpi',
-            'primeiroAcesso',
-            'senhaAlteradaEm'
-          ]) ||
-          (
-            request.resource.data.diff(resource.data).affectedKeys().hasAll([
-              'ultimaSolicitacaoEpiEm',
-              'proximaSolicitacaoEpiEm'
-            ]) &&
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-              'cargoEpi',
-              'ultimaSolicitacaoEpiEm',
-              'proximaSolicitacaoEpiEm'
-            ]) &&
-            request.resource.data.ultimaSolicitacaoEpiEm == request.time &&
-            request.resource.data.proximaSolicitacaoEpiEm >= request.time + duration.value(59, 'd') &&
-            (
-              !resource.data.keys().hasAny(['proximaSolicitacaoEpiEm']) ||
-              request.resource.data.proximaSolicitacaoEpiEm >= resource.data.proximaSolicitacaoEpiEm
-            )
-          )
-        )
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'fcmToken',
+          'cargoEpi',
+          'primeiroAcesso',
+          'senhaAlteradaEm'
+        ])
       );
 
       allow delete: if ehAdmin();

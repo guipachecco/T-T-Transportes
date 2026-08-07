@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=20260807-3">
   <link rel="shortcut icon" href="favicon.ico?v=20260807-3">
   <link rel="apple-touch-icon" href="favicon.png?v=20260807-3">
-  <link rel="stylesheet" href="style.css?v=20260807-13">
+  <link rel="stylesheet" href="style.css?v=20260807-14">
   <link rel="stylesheet" href="style_2.css?v=20260807-11">
   <script src="sweetalert2.all.min.js?v=20260807-11"></script>
 </head>
@@ -495,9 +495,15 @@
                 </div>
                 <form id="epi-movement-form" class="epi-movement-form">
                   <div class="epi-form-field">
-                    <label for="epi-movement-item">Equipamento / tamanho</label>
+                    <label for="epi-movement-item">Equipamento</label>
                     <select id="epi-movement-item" required>
-                      <option value="">Selecione um item</option>
+                      <option value="">Selecione um equipamento</option>
+                    </select>
+                  </div>
+                  <div id="epi-movement-variant-wrapper" class="epi-form-field hidden">
+                    <label for="epi-movement-variant">Tamanho</label>
+                    <select id="epi-movement-variant">
+                      <option value="">Selecione o tamanho</option>
                     </select>
                   </div>
                   <div class="epi-form-row">
@@ -565,6 +571,6 @@
         </div>
       </main>
 
-  <script type="module" src="app.js?v=20260807-13"></script>
+  <script type="module" src="app.js?v=20260807-14"></script>
 </body>
 </html>

@@ -3113,6 +3113,10 @@ select.form-modal-control {
   margin: 0;
 }
 
+.epi-form-field.hidden {
+  display: none !important;
+}
+
 .epi-form-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(100px, 0.45fr);
