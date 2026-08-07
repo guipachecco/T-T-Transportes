@@ -19,9 +19,33 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || 'Novo Aviso - T&T Transportes';
   const notificationOptions = {
     body: payload.notification?.body || 'Confira o novo comunicado no aplicativo.',
-    icon: '/logo.png',
-    badge: '/logo.png'
+    icon: '/favicon.png',
+    badge: '/favicon.png',
+    data: {
+      url: payload.data?.url || '/',
+      secao: payload.data?.secao || null
+    }
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const secao = event.notification.data?.secao;
+  const destino = event.notification.data?.url || (secao ? `/?secao=${secao}` : '/');
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (janelas) => {
+      const janelaAberta = janelas.find((janela) => new URL(janela.url).origin === self.location.origin);
+
+      if (janelaAberta) {
+        if (secao) janelaAberta.postMessage({ tipo: 'ABRIR_SECAO', secao });
+        return janelaAberta.focus();
+      }
+
+      return clients.openWindow(destino);
+    })
+  );
 });

@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>T&T Transportes - App Corporativo</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="style_2.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=20260807-3">
+  <link rel="shortcut icon" href="favicon.ico?v=20260807-3">
+  <link rel="apple-touch-icon" href="favicon.png?v=20260807-3">
+  <link rel="stylesheet" href="style.css?v=20260807-13">
+  <link rel="stylesheet" href="style_2.css?v=20260807-11">
+  <script src="sweetalert2.all.min.js?v=20260807-11"></script>
 </head>
 <body>
   <div id="app">
@@ -40,6 +40,49 @@
       </div>
     </section>
 
+    <section id="password-reset-screen" class="screen">
+      <div class="login-wrapper">
+        <div class="brand-header">
+          <div class="logo-card-container">
+            <img src="logo.jpeg" alt="T&T Transportes" class="logo">
+          </div>
+          <h1 class="brand-title">Defina sua nova senha</h1>
+          <p class="brand-subtitle">Por segurança, é necessário trocar a senha temporária no primeiro acesso.</p>
+        </div>
+
+        <div class="login-card">
+          <h2>Crie uma senha pessoal</h2>
+          <form id="password-reset-form">
+            <div class="input-group">
+              <label for="new-password">Nova senha</label>
+              <input
+                type="password"
+                id="new-password"
+                placeholder="Mínimo de 8 caracteres"
+                minlength="8"
+                autocomplete="new-password"
+                required
+              >
+            </div>
+            <div class="input-group">
+              <label for="confirm-new-password">Confirmar nova senha</label>
+              <input
+                type="password"
+                id="confirm-new-password"
+                placeholder="Digite a nova senha novamente"
+                minlength="8"
+                autocomplete="new-password"
+                required
+              >
+            </div>
+            <p class="password-help">Use pelo menos 8 caracteres e não compartilhe sua senha.</p>
+            <button type="submit" class="btn btn-primary" id="btn-save-new-password">SALVAR NOVA SENHA</button>
+            <button type="button" class="btn btn-link" id="btn-cancel-password-reset">Sair e usar outra conta</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <section id="dashboard-screen" class="screen">
       <header class="header">
         <button id="btn-hamburger" class="btn-hamburger" onclick="abrirMenuSidebar()" aria-label="Abrir menu de navegação">
@@ -48,7 +91,9 @@
           <span class="hamburger-line"></span>
         </button>
         
-        <img src="logo.jpeg" alt="T&T Transportes" class="logo-small">
+        <button type="button" class="header-logo-button" onclick="irParaMural()" aria-label="Voltar ao Mural de Avisos" title="Voltar ao Mural de Avisos">
+          <img src="logo.jpeg" alt="T&T Transportes" class="logo-small">
+        </button>
         
         <div class="header-spacer"></div>
       </header>
@@ -76,6 +121,13 @@
           <button onclick="mostrarSecao('refeicoes')" class="sidebar-btn">
              Reservar Refeição
           </button>
+          <button onclick="mostrarSecao('equipamentos')" class="sidebar-btn sidebar-btn-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 4 4.5 5.5 2 10l3 1.5V21h14v-9.5l3-1.5-2.5-4.5L16 4c-.7 1.3-2 2-4 2S8.7 5.3 8 4Z"/>
+              <path d="M9 4c.5 1 1.5 1.5 3 1.5S14.5 5 15 4"/>
+            </svg>
+            <span>Equipamentos e EPIs</span>
+          </button>
         </nav>
 
         <button id="btn-logout-sidebar" class="sidebar-btn btn-logout-main">
@@ -90,15 +142,15 @@
             <p>Mural de Avisos Corporativos</p>
           </div>
           <!-- Dashboard de Refeições do Mês Vigente -->
-<div class="kpi-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
-  <div class="card-kpi" style="background: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-    <span style="font-size: 0.75rem; font-weight: 700; color: #64748B; text-transform: uppercase;">Almoços no Mês</span>
-    <h3 id="total-refeicoes-mes" style="margin: 6px 0 0 0; color: #0F172A; font-size: 1.5rem;">0</h3>
+<div id="personal-meal-kpis" class="kpi-container personal-meal-kpis">
+  <div class="card-kpi personal-meal-kpi">
+    <span class="kpi-label">Refeições no mês</span>
+    <h3 id="total-refeicoes-mes" class="kpi-value">0</h3>
   </div>
 
-  <div class="card-kpi" style="background: #FEF3C7; padding: 14px; border-radius: 8px; border: 1px solid #FCD34D; text-align: center;">
-    <span style="font-size: 0.75rem; font-weight: 700; color: #92400E; text-transform: uppercase;">Gasto no Mês</span>
-    <h3 id="custo-total-mes" style="margin: 6px 0 0 0; color: #B45309; font-size: 1.5rem;">R$ 0,00</h3>
+  <div class="card-kpi personal-meal-kpi personal-meal-price">
+    <span class="kpi-label">Valor gasto no mês</span>
+    <h3 id="custo-total-mes" class="kpi-value">R$ 0,00</h3>
   </div>
 </div>
           <div id="admin-panel" class="admin-panel hidden">
@@ -106,7 +158,7 @@
               <h3>Dashboard de Refeições do Dia</h3>
             </div>
             
-            <div class="dashboard-grid">
+            <div class="dashboard-grid admin-daily-meal-summary">
               <div class="card-kpi">
                 <span class="kpi-label">Almoços Hoje</span>
                 <h2 id="total-almoco" class="kpi-value">0</h2>
@@ -115,14 +167,97 @@
                 <span class="kpi-label">Jantas Hoje</span>
                 <h2 id="total-janta" class="kpi-value">0</h2>
               </div>
-              <div class="card-kpi">
-                <span class="kpi-label">Total Refeições</span>
-                <h2 id="total-refeicoes" class="kpi-value">0</h2>
-              </div>
-              <div class="card-kpi card-kpi-highlight">
-                <span class="kpi-label">Custo Total (R$ 4,00)</span>
-                <h2 id="custo-total" class="kpi-value highlight-text">R$ 0,00</h2>
-              </div>
+            </div>
+
+            <div class="meal-admin-tools">
+              <section class="meal-admin-card" aria-labelledby="fixed-meals-title">
+                <div class="meal-admin-heading">
+                  <span class="meal-admin-heading-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 3v8M3 3v5a3 3 0 0 0 6 0V3M6 11v10M16 3v18M16 3c3 2 4 5 4 8h-4"/>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 id="fixed-meals-title">Refeições permanentes</h3>
+                    <p>Defina quem deve entrar automaticamente de segunda a sexta-feira.</p>
+                  </div>
+                </div>
+
+                <form id="fixed-meal-form" class="fixed-meal-form">
+                  <div class="meal-admin-field">
+                    <label for="fixed-meal-user">Colaborador</label>
+                    <select id="fixed-meal-user" required>
+                      <option value="">Selecione um colaborador</option>
+                    </select>
+                  </div>
+
+                  <div class="fixed-meal-options" aria-label="Refeições permanentes do colaborador">
+                    <label class="fixed-meal-option" for="fixed-meal-lunch">
+                      <input type="checkbox" id="fixed-meal-lunch">
+                      <span class="fixed-meal-check" aria-hidden="true"></span>
+                      <span>
+                        <strong>Almoço fixo</strong>
+                        <small>Incluir automaticamente de segunda a sexta</small>
+                      </span>
+                    </label>
+                    <label class="fixed-meal-option" for="fixed-meal-dinner">
+                      <input type="checkbox" id="fixed-meal-dinner">
+                      <span class="fixed-meal-check" aria-hidden="true"></span>
+                      <span>
+                        <strong>Janta fixa</strong>
+                        <small>Incluir automaticamente de segunda a sexta</small>
+                      </span>
+                    </label>
+                  </div>
+
+                  <button type="submit" class="btn meal-admin-save">Salvar configuração</button>
+                </form>
+
+                <div id="fixed-meals-list" class="fixed-meals-list" aria-live="polite"></div>
+              </section>
+
+              <section class="meal-admin-card" aria-labelledby="monthly-meals-title">
+                <div class="meal-admin-heading">
+                  <span class="meal-admin-heading-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="5" width="18" height="16" rx="2"/>
+                      <path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 id="monthly-meals-title">Controle mensal de refeições</h3>
+                    <p>Consulte por mês, filtre por colaborador e ajuste cada dia.</p>
+                  </div>
+                </div>
+
+                <div class="monthly-meal-filters">
+                  <div class="meal-admin-field">
+                    <label for="monthly-meal-month">Mês</label>
+                    <input type="month" id="monthly-meal-month">
+                  </div>
+                  <div class="meal-admin-field">
+                    <label for="monthly-meal-user">Colaborador</label>
+                    <select id="monthly-meal-user">
+                      <option value="">Todos os colaboradores</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="monthly-meal-summary" aria-live="polite">
+                  <div>
+                    <span>Almoços</span>
+                    <strong id="monthly-meal-lunches">0</strong>
+                  </div>
+                  <div>
+                    <span>Jantas</span>
+                    <strong id="monthly-meal-dinners">0</strong>
+                  </div>
+                </div>
+
+                <div id="monthly-meals-list" class="monthly-meals-list" aria-live="polite">
+                  <p class="text-muted-small">Carregando refeições...</p>
+                </div>
+              </section>
             </div>
 
             <div class="divider"></div>
@@ -166,7 +301,24 @@
               <form id="notice-form" class="notice-form">
                 <input type="text" id="notice-title" placeholder="Título do aviso" required class="form-input">
                 <textarea id="notice-content" placeholder="Escreva a mensagem aqui..." required class="form-textarea"></textarea>
-                <button type="submit" class="btn btn-dark">Publicar Aviso</button>
+
+                <div class="notice-photo-field">
+                  <input type="file" id="notice-image" accept="image/*" class="notice-photo-input">
+                  <label for="notice-image" class="notice-photo-button" title="Adicionar foto ao aviso">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 3 7.2 5H4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3h-3.2L15 3H9Zm3 15.2A5.2 5.2 0 1 1 12 7.8a5.2 5.2 0 0 1 0 10.4Zm0-2A3.2 3.2 0 1 0 12 9.8a3.2 3.2 0 0 0 0 6.4Z"/>
+                    </svg>
+                    <span>Adicionar foto</span>
+                  </label>
+                  <small>Opcional — escolha uma imagem da galeria ou tire uma foto.</small>
+                </div>
+
+                <div id="notice-image-preview-wrapper" class="notice-image-preview-wrapper hidden" aria-live="polite">
+                  <img id="notice-image-preview" alt="Prévia da foto do aviso">
+                  <button type="button" id="btn-remove-notice-image" class="notice-image-remove" aria-label="Remover foto selecionada" title="Remover foto">&times;</button>
+                </div>
+
+                <button type="submit" id="btn-publish-notice" class="btn btn-dark">Publicar Aviso</button>
               </form>
             </div>
           </div>
@@ -244,8 +396,175 @@
               </div>
           </div>
         </div>
+
+        <div id="sec-equipamentos" class="dashboard-section hidden-section epi-page">
+          <div class="epi-page-header">
+            <div class="epi-page-heading">
+              <span class="epi-page-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 4 4.5 5.5 2 10l3 1.5V21h14v-9.5l3-1.5-2.5-4.5L16 4c-.7 1.3-2 2-4 2S8.7 5.3 8 4Z"/>
+                  <path d="M9 4c.5 1 1.5 1.5 3 1.5S14.5 5 15 4"/>
+                </svg>
+              </span>
+              <div>
+                <span class="epi-eyebrow">Almoxarifado interno</span>
+                <h2>Equipamentos e EPIs</h2>
+                <p>Solicite uniformes e equipamentos disponíveis para o seu trabalho.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="epi-user-layout">
+            <section class="epi-surface epi-request-panel" aria-labelledby="epi-request-title">
+              <div class="epi-section-heading">
+                <div>
+                  <span class="epi-step-label">Nova solicitação</span>
+                  <h3 id="epi-request-title">O que você precisa?</h3>
+                </div>
+                <span id="epi-cart-count" class="epi-cart-count">0 itens</span>
+              </div>
+
+              <div class="epi-role-field">
+                <label for="epi-user-role">Sua área / função</label>
+                <select id="epi-user-role" class="form-input">
+                  <option value="">Selecione antes de escolher</option>
+                  <option value="motorista">Motorista</option>
+                  <option value="administrativo">Administrativo</option>
+                  <option value="operacional">Operacional / Outros</option>
+                </select>
+                <small>A polo preta é exclusiva para motoristas e equipe administrativa.</small>
+              </div>
+
+              <div id="epi-request-lock" class="epi-request-lock hidden" aria-live="polite"></div>
+
+              <div id="epi-catalog-grid" class="epi-catalog-grid" aria-live="polite">
+                <div class="epi-loading">Carregando equipamentos disponíveis...</div>
+              </div>
+
+              <div id="epi-cart-panel" class="epi-cart-panel hidden">
+                <div class="epi-cart-heading">
+                  <div>
+                    <span class="epi-step-label">Resumo</span>
+                    <h3>Seu pedido</h3>
+                  </div>
+                  <button type="button" id="epi-clear-cart" class="epi-text-button">Limpar</button>
+                </div>
+                <div id="epi-cart-list" class="epi-cart-list"></div>
+                <div class="epi-request-note">
+                  <label for="epi-request-note">Observação <span>(opcional)</span></label>
+                  <textarea id="epi-request-note" rows="3" placeholder="Ex.: equipamento danificado ou necessidade de troca."></textarea>
+                </div>
+                <button type="button" id="epi-submit-request" class="btn epi-primary-button">Enviar solicitação</button>
+              </div>
+            </section>
+
+            <aside class="epi-surface epi-my-requests" aria-labelledby="epi-my-requests-title">
+              <div class="epi-section-heading compact">
+                <div>
+                  <span class="epi-step-label">Acompanhamento</span>
+                  <h3 id="epi-my-requests-title">Meus pedidos</h3>
+                </div>
+              </div>
+              <div id="epi-my-requests-list" class="epi-request-list" aria-live="polite">
+                <p class="epi-empty-state">Nenhuma solicitação enviada.</p>
+              </div>
+            </aside>
+          </div>
+
+          <section id="epi-admin-panel" class="epi-admin-panel hidden" aria-labelledby="epi-admin-title">
+            <div class="epi-admin-header">
+              <div>
+                <span class="epi-eyebrow">Acesso administrativo</span>
+                <h2 id="epi-admin-title">Controle do estoque</h2>
+                <p>Registre movimentações, confira saldos e atenda às solicitações.</p>
+              </div>
+              <div class="epi-admin-kpis">
+                <div><span>Unidades em estoque</span><strong id="epi-total-stock">0</strong></div>
+                <div><span>Estoque baixo</span><strong id="epi-low-stock">0</strong></div>
+                <div><span>Pedidos pendentes</span><strong id="epi-pending-count">0</strong></div>
+              </div>
+            </div>
+
+            <div class="epi-admin-grid">
+              <section class="epi-admin-card epi-movement-card">
+                <div class="epi-section-heading compact">
+                  <div>
+                    <span class="epi-step-label">Movimentação manual</span>
+                    <h3>Dar entrada ou saída</h3>
+                  </div>
+                </div>
+                <form id="epi-movement-form" class="epi-movement-form">
+                  <div class="epi-form-field">
+                    <label for="epi-movement-item">Equipamento / tamanho</label>
+                    <select id="epi-movement-item" required>
+                      <option value="">Selecione um item</option>
+                    </select>
+                  </div>
+                  <div class="epi-form-row">
+                    <div class="epi-form-field">
+                      <label for="epi-movement-type">Movimento</label>
+                      <select id="epi-movement-type" required>
+                        <option value="entrada">Entrada</option>
+                        <option value="saida">Saída</option>
+                      </select>
+                    </div>
+                    <div class="epi-form-field">
+                      <label for="epi-movement-quantity">Quantidade</label>
+                      <input type="number" id="epi-movement-quantity" min="1" value="1" required>
+                    </div>
+                  </div>
+                  <div class="epi-form-field">
+                    <label for="epi-movement-reason">Motivo / referência</label>
+                    <input type="text" id="epi-movement-reason" maxlength="120" placeholder="Ex.: compra, reposição ou entrega direta" required>
+                  </div>
+                  <button type="submit" class="btn epi-dark-button">Registrar movimentação</button>
+                </form>
+              </section>
+
+              <section class="epi-admin-card epi-stock-card">
+                <div class="epi-section-heading compact">
+                  <div>
+                    <span class="epi-step-label">Posição atual</span>
+                    <h3>Estoque por item</h3>
+                  </div>
+                </div>
+                <div id="epi-stock-list" class="epi-stock-list" aria-live="polite"></div>
+              </section>
+            </div>
+
+            <div class="epi-admin-grid epi-admin-grid-bottom">
+              <section class="epi-admin-card">
+                <div class="epi-section-heading compact">
+                  <div>
+                    <span class="epi-step-label">Fila de atendimento</span>
+                    <h3>Solicitações dos colaboradores</h3>
+                  </div>
+                  <select id="epi-request-status-filter" class="epi-compact-select" aria-label="Filtrar solicitações">
+                    <option value="pendente">Pendentes</option>
+                    <option value="aprovado">Aguardando retirada</option>
+                    <option value="retirado">Retiradas</option>
+                    <option value="expirado">Expiradas</option>
+                    <option value="todos">Todas</option>
+                    <option value="recusado">Recusadas</option>
+                  </select>
+                </div>
+                <div id="epi-admin-requests-list" class="epi-admin-request-list" aria-live="polite"></div>
+              </section>
+
+              <section class="epi-admin-card">
+                <div class="epi-section-heading compact">
+                  <div>
+                    <span class="epi-step-label">Rastreabilidade</span>
+                    <h3>Últimas movimentações</h3>
+                  </div>
+                </div>
+                <div id="epi-movements-list" class="epi-movements-list" aria-live="polite"></div>
+              </section>
+            </div>
+          </section>
+        </div>
       </main>
 
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=20260807-13"></script>
 </body>
 </html>

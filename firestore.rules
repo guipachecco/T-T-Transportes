@@ -1,0 +1,226 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function estaAutenticado() {
+      return request.auth != null;
+    }
+
+    function ehDono(userId) {
+      return estaAutenticado() && request.auth.uid == userId;
+    }
+
+    function ehAdmin() {
+      return estaAutenticado() &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function intervaloSolicitacaoEpiDisponivel() {
+      let perfilAntes = get(
+        /databases/$(database)/documents/usuarios/$(request.auth.uid)
+      ).data;
+      let perfilDepois = getAfter(
+        /databases/$(database)/documents/usuarios/$(request.auth.uid)
+      ).data;
+
+      return (
+        !perfilAntes.keys().hasAny(['proximaSolicitacaoEpiEm']) ||
+        perfilAntes.proximaSolicitacaoEpiEm <= request.time
+      ) &&
+      perfilDepois.keys().hasAll([
+        'ultimaSolicitacaoEpiEm',
+        'proximaSolicitacaoEpiEm'
+      ]) &&
+      perfilDepois.ultimaSolicitacaoEpiEm == request.time &&
+      perfilDepois.proximaSolicitacaoEpiEm >= request.time + duration.value(59, 'd');
+    }
+
+    // Perfis: o administrador gerencia tudo. O colaborador pode alterar somente
+    // os campos usados pelo próprio aplicativo, sem conseguir mudar sua função de acesso.
+    match /usuarios/{userId} {
+      allow read: if estaAutenticado();
+
+      allow create: if ehAdmin() || (
+        ehDono(userId) &&
+        request.resource.data.role == 'colaborador'
+      );
+
+      allow update: if ehAdmin() || (
+        ehDono(userId) &&
+        request.resource.data.role == resource.data.role &&
+        (
+          !request.resource.data.keys().hasAny(['cargoEpi']) ||
+          request.resource.data.cargoEpi in ['motorista', 'administrativo', 'operacional']
+        ) &&
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'fcmToken',
+            'cargoEpi',
+            'primeiroAcesso',
+            'senhaAlteradaEm'
+          ]) ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasAll([
+              'ultimaSolicitacaoEpiEm',
+              'proximaSolicitacaoEpiEm'
+            ]) &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'cargoEpi',
+              'ultimaSolicitacaoEpiEm',
+              'proximaSolicitacaoEpiEm'
+            ]) &&
+            request.resource.data.ultimaSolicitacaoEpiEm == request.time &&
+            request.resource.data.proximaSolicitacaoEpiEm >= request.time + duration.value(59, 'd') &&
+            (
+              !resource.data.keys().hasAny(['proximaSolicitacaoEpiEm']) ||
+              request.resource.data.proximaSolicitacaoEpiEm >= resource.data.proximaSolicitacaoEpiEm
+            )
+          )
+        )
+      );
+
+      allow delete: if ehAdmin();
+    }
+
+    match /avisos/{avisoId} {
+      allow read: if estaAutenticado();
+      allow create, delete: if ehAdmin();
+      allow update: if ehAdmin() || (
+        estaAutenticado() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leituras'])
+      );
+    }
+
+    match /cardapio/{cardapioId} {
+      allow read: if estaAutenticado();
+      allow write: if ehAdmin();
+    }
+
+    match /reservas_refeicao/{reservaId} {
+      allow read: if estaAutenticado();
+      allow create, update: if estaAutenticado() &&
+        (
+          request.resource.data.colaboradorUid == request.auth.uid ||
+          request.resource.data.userId == request.auth.uid
+        );
+      allow delete: if ehAdmin() || (
+        estaAutenticado() &&
+        (
+          resource.data.colaboradorUid == request.auth.uid ||
+          resource.data.userId == request.auth.uid
+        )
+      );
+    }
+
+    // Ajustes realizados pelo administrador nas refeições fixas ou manuais.
+    match /excecoes_refeicao/{excecaoId} {
+      allow read: if estaAutenticado();
+      allow write: if ehAdmin();
+    }
+
+    match /manutencoes/{manutencaoId} {
+      allow read, create: if estaAutenticado();
+      allow update, delete: if ehAdmin();
+    }
+
+    match /marketplace/{anuncioId} {
+      allow read: if estaAutenticado();
+      allow create: if estaAutenticado() &&
+        (
+          request.resource.data.vendedorUid == request.auth.uid ||
+          request.resource.data.colaboradorUid == request.auth.uid ||
+          request.resource.data.userId == request.auth.uid
+        );
+      allow update, delete: if ehAdmin() || (
+        estaAutenticado() &&
+        (
+          resource.data.vendedorUid == request.auth.uid ||
+          resource.data.colaboradorUid == request.auth.uid ||
+          resource.data.userId == request.auth.uid
+        )
+      );
+    }
+
+    // Catálogo e saldo dos equipamentos. Todos podem consultar; somente o admin movimenta.
+    match /estoque_epi/{itemId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if ehAdmin();
+    }
+
+    // O colaborador cria e consulta apenas os próprios pedidos. O cancelamento
+    // é permitido enquanto o pedido ainda está pendente; o restante é do admin.
+    match /solicitacoes_epi/{solicitacaoId} {
+      allow read: if ehAdmin() || (
+        estaAutenticado() &&
+        resource.data.colaboradorUid == request.auth.uid
+      );
+
+      allow create: if estaAutenticado() &&
+        request.resource.data.colaboradorUid == request.auth.uid &&
+        intervaloSolicitacaoEpiDisponivel() &&
+        request.resource.data.status == 'pendente' &&
+        request.resource.data.cargoDeclarado in ['motorista', 'administrativo', 'operacional'] &&
+        request.resource.data.itens is list &&
+        request.resource.data.itens.size() > 0 &&
+        request.resource.data.itens.size() <= 30 &&
+        request.resource.data.totalItens is int &&
+        request.resource.data.totalItens > 0 &&
+        request.resource.data.keys().hasAll([
+          'colaboradorUid',
+          'colaboradorNome',
+          'cargoDeclarado',
+          'itens',
+          'totalItens',
+          'status',
+          'criadoEm',
+          'atualizadoEm'
+        ]) &&
+        request.resource.data.keys().hasOnly([
+          'colaboradorUid',
+          'colaboradorNome',
+          'colaboradorEmail',
+          'cargoDeclarado',
+          'itens',
+          'totalItens',
+          'observacao',
+          'status',
+          'criadoEm',
+          'atualizadoEm'
+        ]);
+
+      allow update: if ehAdmin() || (
+        estaAutenticado() &&
+        resource.data.colaboradorUid == request.auth.uid &&
+        request.resource.data.colaboradorUid == request.auth.uid &&
+        (
+          (
+            resource.data.status == 'pendente' &&
+            request.resource.data.status == 'cancelado' &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status',
+              'canceladoEm',
+              'atualizadoEm'
+            ])
+          ) ||
+          (
+            resource.data.status == 'aprovado' &&
+            request.resource.data.status == 'aprovado' &&
+            request.resource.data.avisoAprovacaoVisualizadoEm == request.time &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'avisoAprovacaoVisualizadoEm'
+            ])
+          )
+        )
+      );
+
+      allow delete: if ehAdmin();
+    }
+
+    // Histórico de auditoria do estoque: visível e gravável apenas pelo administrador.
+    match /movimentacoes_epi/{movimentacaoId} {
+      allow read, create: if ehAdmin();
+      allow update, delete: if false;
+    }
+  }
+}
