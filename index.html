@@ -4,20 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>T&T Transportes - App Corporativo</title>
-  <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=20260807-3">
-  <link rel="shortcut icon" href="favicon.ico?v=20260807-3">
-  <link rel="apple-touch-icon" href="favicon.png?v=20260807-3">
-  <link rel="stylesheet" href="style.css?v=20260810-15">
-  <link rel="stylesheet" href="style_2.css?v=20260807-11">
-  <script src="sweetalert2.all.min.js?v=20260807-11"></script>
+  <meta name="theme-color" content="#0F172A">
+  <meta name="application-name" content="T&T Portal">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="T&T Portal">
+  <link rel="manifest" href="manifest.webmanifest?v=20260810-2">
+  <link rel="icon" type="image/png" sizes="250x250" href="favicon.png?v=20260810-2">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=20260810-2">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260810-2">
+  <link rel="stylesheet" href="style.css?v=20260810-19">
+  <script defer src="sweetalert2.all.min.js?v=20260807-11"></script>
 </head>
 <body>
+  <svg class="svg-sprite" aria-hidden="true" focusable="false">
+    <symbol id="icon-notice" viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h7"/></symbol>
+    <symbol id="icon-store" viewBox="0 0 24 24"><path d="M4 10v10h16V10M3 4h18l-2 6H5L3 4Z"/><path d="M8 20v-6h8v6M5 10a3 3 0 0 0 6 0M11 10a3 3 0 0 0 6 0M17 10a3 3 0 0 0 3 2"/></symbol>
+    <symbol id="icon-maintenance" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5-5L12 3.6 9.6 6 7.3 3.7a4 4 0 0 0 5 5L4 17l3 3 8.3-8.3a4 4 0 0 0 5-5L18 9l-2.4-2.4L18 4.3a4 4 0 0 0-3.3 2Z"/></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.5h.01"/></symbol>
+    <symbol id="icon-meal" viewBox="0 0 24 24"><path d="M6 3v8M3 3v5a3 3 0 0 0 6 0V3M6 11v10M16 3v18M16 3c3 2 4 5 4 8h-4"/></symbol>
+    <symbol id="icon-shirt" viewBox="0 0 24 24"><path d="M8 4 4.5 5.5 2 10l3 1.5V21h14v-9.5l3-1.5-2.5-4.5L16 4c-.7 1.3-2 2-4 2S8.7 5.3 8 4Z"/></symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2"/></symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24"><path d="M9 4 7.5 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.5L15 4H9Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="icon-history" viewBox="0 0 24 24"><path d="M4 4v6h6M5.5 17a8 8 0 1 0-.8-9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.5 8a7 7 0 0 1 11.5-1l2 5M17.5 16a7 7 0 0 1-11.5 1l-2-5"/></symbol>
+    <symbol id="icon-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6zM14 2v5h5"/><path d="M9 12h6M9 16h6"/></symbol>
+    <symbol id="icon-backup" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+    <symbol id="icon-location" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  </svg>
   <div id="app">
     <section id="login-screen" class="screen active">
       <div class="login-wrapper">
         <div class="brand-header">
           <div class="logo-card-container">
-            <img src="logo.jpeg" alt="T&T Transportes" class="logo">
+            <img src="logo.jpeg" alt="T&T Transportes" class="logo" width="1097" height="226" decoding="async">
           </div>
           <h1 class="brand-title">Bem-vindo, Colaborador!</h1>
           <p class="brand-subtitle">Acesse sua conta para gerenciar rotinas e frotas.</p>
@@ -44,7 +72,7 @@
       <div class="login-wrapper">
         <div class="brand-header">
           <div class="logo-card-container">
-            <img src="logo.jpeg" alt="T&T Transportes" class="logo">
+            <img src="logo.jpeg" alt="T&T Transportes" class="logo" width="1097" height="226" decoding="async">
           </div>
           <h1 class="brand-title">Defina sua nova senha</h1>
           <p class="brand-subtitle">Por segurança, é necessário trocar a senha temporária no primeiro acesso.</p>
@@ -92,7 +120,7 @@
         </button>
         
         <button type="button" class="header-logo-button" onclick="irParaMural()" aria-label="Voltar ao Mural de Avisos" title="Voltar ao Mural de Avisos">
-          <img src="logo.jpeg" alt="T&T Transportes" class="logo-small">
+          <img src="logo.jpeg" alt="T&T Transportes" class="logo-small" width="1097" height="226" decoding="async">
         </button>
         
         <div class="header-spacer"></div>
@@ -105,33 +133,46 @@
             <strong id="sidebar-user-name">Usuário</strong>
             <small id="sidebar-user-role">Colaborador</small>
           </div>
-          <button id="btn-close-sidebar" class="btn-close" onclick="fecharMenuSidebar()" aria-label="Fechar menu">Fechar</button>
+          <button id="btn-close-sidebar" class="btn-close" onclick="fecharMenuSidebar()" aria-label="Fechar menu"><svg class="ui-icon" aria-hidden="true"><use href="#icon-close"></use></svg><span>Fechar</span></button>
         </div>
 
         <nav class="sidebar-nav">
-          <button onclick="mostrarSecao('mural')" class="sidebar-btn">
-             Mural de Avisos
+          <button onclick="mostrarSecao('mural')" class="sidebar-btn sidebar-btn-icon">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-notice"></use></svg><span>Mural de Avisos</span>
           </button>
-          <button onclick="mostrarSecao('marketplace')" class="sidebar-btn">
-             Marketplace / Feirinha
+          <button onclick="mostrarSecao('marketplace')" class="sidebar-btn sidebar-btn-icon">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-store"></use></svg><span>Marketplace / Feirinha</span>
           </button>
-          <button onclick="abrirReporteManutencao()" class="sidebar-btn btn-danger-soft">
-             Reportar Manutenção / SOS
+          <button onclick="abrirReporteManutencao()" class="sidebar-btn sidebar-btn-icon btn-danger-soft">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-maintenance"></use></svg><span>Reportar Manutenção / SOS</span>
           </button>
-          <button onclick="mostrarSecao('refeicoes')" class="sidebar-btn">
-             Reservar Refeição
+          <button onclick="mostrarSecao('ocorrencias')" class="sidebar-btn sidebar-btn-icon btn-danger-soft">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-alert"></use></svg>
+            <span>Acidentes e Ocorrências</span>
+          </button>
+          <button onclick="mostrarSecao('refeicoes')" class="sidebar-btn sidebar-btn-icon">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-meal"></use></svg><span>Reservar Refeição</span>
           </button>
           <button onclick="mostrarSecao('equipamentos')" class="sidebar-btn sidebar-btn-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M8 4 4.5 5.5 2 10l3 1.5V21h14v-9.5l3-1.5-2.5-4.5L16 4c-.7 1.3-2 2-4 2S8.7 5.3 8 4Z"/>
-              <path d="M9 4c.5 1 1.5 1.5 3 1.5S14.5 5 15 4"/>
-            </svg>
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-shirt"></use></svg>
             <span>Equipamentos e EPIs</span>
+          </button>
+          <button id="admin-reports-menu-button" onclick="mostrarSecao('relatorios')" class="sidebar-btn sidebar-btn-icon hidden">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-chart"></use></svg>
+            <span>Relatórios e Segurança</span>
+          </button>
+          <button id="admin-meal-close-menu-button" onclick="mostrarSecao('fechamentos')" class="sidebar-btn sidebar-btn-icon hidden">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-meal"></use></svg>
+            <span>Fechamento de Refeições</span>
+          </button>
+          <button id="install-app-button" type="button" class="sidebar-btn sidebar-btn-icon hidden">
+            <svg class="menu-icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+            <span>Instalar aplicativo</span>
           </button>
         </nav>
 
-        <button id="btn-logout-sidebar" class="sidebar-btn btn-logout-main">
-          Sair da Conta
+        <button id="btn-logout-sidebar" class="sidebar-btn sidebar-btn-icon btn-logout-main">
+          <svg class="menu-icon" aria-hidden="true"><use href="#icon-logout"></use></svg><span>Sair da Conta</span>
         </button>
       </aside>
        
@@ -151,6 +192,7 @@
   <div class="card-kpi personal-meal-kpi personal-meal-price">
     <span class="kpi-label">Valor gasto no mês</span>
     <h3 id="custo-total-mes" class="kpi-value">R$ 0,00</h3>
+    <small id="calculo-custo-mes" class="personal-meal-calculation">0 × R$ 4,00 por refeição</small>
   </div>
 </div>
           <div id="admin-panel" class="admin-panel hidden">
@@ -179,7 +221,7 @@
                   </span>
                   <div>
                     <h3 id="fixed-meals-title">Refeições permanentes</h3>
-                    <p>Defina quem deve entrar automaticamente de segunda a sexta-feira.</p>
+                    <p>Ao ativar, inclui todos os dias úteis do mês e permanece nos meses seguintes.</p>
                   </div>
                 </div>
 
@@ -210,53 +252,56 @@
                     </label>
                   </div>
 
-                  <button type="submit" class="btn meal-admin-save">Salvar configuração</button>
+                  <button type="submit" class="btn meal-admin-save button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-check"></use></svg><span>Salvar configuração</span></button>
                 </form>
 
                 <div id="fixed-meals-list" class="fixed-meals-list" aria-live="polite"></div>
               </section>
 
-              <section class="meal-admin-card" aria-labelledby="monthly-meals-title">
+              <section class="meal-admin-card absence-admin-card" aria-labelledby="absence-title">
                 <div class="meal-admin-heading">
                   <span class="meal-admin-heading-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="5" width="18" height="16" rx="2"/>
-                      <path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+                      <path d="M8 2v4M16 2v4M3 9h18"/><rect x="3" y="4" width="18" height="17" rx="2"/><path d="m9 15 2 2 4-5"/>
                     </svg>
                   </span>
                   <div>
-                    <h3 id="monthly-meals-title">Controle mensal de refeições</h3>
-                    <p>Consulte por mês, filtre por colaborador e ajuste cada dia.</p>
+                    <h3 id="absence-title">Férias, folgas e afastamentos</h3>
+                    <p>As refeições do colaborador serão suspensas durante o período informado.</p>
                   </div>
                 </div>
 
-                <div class="monthly-meal-filters">
-                  <div class="meal-admin-field">
-                    <label for="monthly-meal-month">Mês</label>
-                    <input type="month" id="monthly-meal-month">
-                  </div>
-                  <div class="meal-admin-field">
-                    <label for="monthly-meal-user">Colaborador</label>
-                    <select id="monthly-meal-user">
-                      <option value="">Todos os colaboradores</option>
+                <form id="absence-form" class="absence-form">
+                  <div class="meal-admin-field absence-user-field">
+                    <label for="absence-user">Colaborador</label>
+                    <select id="absence-user" required>
+                      <option value="">Selecione um colaborador</option>
                     </select>
                   </div>
-                </div>
-
-                <div class="monthly-meal-summary" aria-live="polite">
-                  <div>
-                    <span>Almoços</span>
-                    <strong id="monthly-meal-lunches">0</strong>
+                  <div class="meal-admin-field">
+                    <label for="absence-type">Tipo</label>
+                    <select id="absence-type" required>
+                      <option value="ferias">Férias</option>
+                      <option value="folga">Folga</option>
+                      <option value="afastamento">Afastamento</option>
+                    </select>
                   </div>
-                  <div>
-                    <span>Jantas</span>
-                    <strong id="monthly-meal-dinners">0</strong>
+                  <div class="meal-admin-field">
+                    <label for="absence-start">Início</label>
+                    <input type="date" id="absence-start" required>
                   </div>
-                </div>
+                  <div class="meal-admin-field">
+                    <label for="absence-end">Fim</label>
+                    <input type="date" id="absence-end" required>
+                  </div>
+                  <div class="meal-admin-field absence-reason-field">
+                    <label for="absence-reason">Observação <span>(opcional)</span></label>
+                    <input type="text" id="absence-reason" maxlength="160" placeholder="Ex.: férias programadas">
+                  </div>
+                  <button type="submit" class="btn meal-admin-save button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg><span>Registrar período</span></button>
+                </form>
 
-                <div id="monthly-meals-list" class="monthly-meals-list" aria-live="polite">
-                  <p class="text-muted-small">Carregando refeições...</p>
-                </div>
+                <div id="absence-list" class="absence-list" aria-live="polite"></div>
               </section>
             </div>
 
@@ -265,8 +310,8 @@
             <div class="section-block">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
     <h3>Gestão de Manutenções Pendentes</h3>
-    <button type="button" onclick="abrirHistoricoManutencoes()" class="btn btn-secondary" style="font-size: 0.85rem;">
-      📋 Ver Histórico de Concluídos
+    <button type="button" onclick="abrirHistoricoManutencoes()" class="btn btn-secondary button-with-icon" style="font-size: 0.85rem;">
+      <svg class="ui-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span>Ver Histórico de Concluídos</span>
     </button>
   </div>
 
@@ -277,8 +322,8 @@
 <div id="modal-historico-manutencao" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 9999; align-items: center; justify-content: center; padding: 16px;">
   <div class="modal-content" style="background: #fff; width: 100%; max-width: 700px; max-height: 85vh; border-radius: 12px; padding: 20px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px;">
-      <h3 style="margin: 0; color: #0F172A;">📋 Histórico de Manutenções Concluídas</h3>
-      <button type="button" onclick="fecharHistoricoManutencoes()" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748B;">&times;</button>
+      <h3 class="heading-with-icon" style="margin: 0; color: #0F172A;"><svg class="ui-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span>Histórico de Manutenções Concluídas</span></h3>
+      <button type="button" onclick="fecharHistoricoManutencoes()" class="icon-only-button" aria-label="Fechar histórico"><svg class="ui-icon" aria-hidden="true"><use href="#icon-close"></use></svg></button>
     </div>
     
     <div id="historico-manutencoes-list" style="display: flex; flex-direction: column; gap: 12px;">
@@ -318,7 +363,7 @@
                   <button type="button" id="btn-remove-notice-image" class="notice-image-remove" aria-label="Remover foto selecionada" title="Remover foto">&times;</button>
                 </div>
 
-                <button type="submit" id="btn-publish-notice" class="btn btn-dark">Publicar Aviso</button>
+                <button type="submit" id="btn-publish-notice" class="btn btn-dark button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-notice"></use></svg><span>Publicar Aviso</span></button>
               </form>
             </div>
           </div>
@@ -335,8 +380,8 @@
               <h2>Feirinha de Colaboradores</h2>
               <p>Compre, venda ou divulgue seus produtos/serviços</p>
             </div>
-            <button onclick="abrirModalNovoAnuncioMarketplace()" class="btn btn-primary btn-sm">
-              + Criar Anúncio
+            <button onclick="abrirModalNovoAnuncioMarketplace()" class="btn btn-primary btn-sm button-with-icon">
+              <svg class="ui-icon" aria-hidden="true"><use href="#icon-store"></use></svg><span>Criar Anúncio</span>
             </button>
           </div>
 
@@ -386,7 +431,7 @@
                 <input type="text" id="menu-dessert" placeholder="Ex: Pudim de leite" class="form-input">
               </div>
 
-              <button type="submit" class="btn btn-dark">Salvar Cardápio do Dia</button>
+              <button type="submit" class="btn btn-dark button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-check"></use></svg><span>Salvar Cardápio do Dia</span></button>
             </form>
           </div>
           <div class="divider"></div>
@@ -396,6 +441,130 @@
             <div id="weekly-menu-list" class="dashboard-grid">
               </div>
           </div>
+        </div>
+
+        <div id="sec-ocorrencias" class="dashboard-section hidden-section occurrence-page">
+          <div class="occurrence-header">
+            <div class="occurrence-header-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.5h.01"/>
+              </svg>
+            </div>
+            <div>
+              <span class="occurrence-eyebrow">Segurança operacional</span>
+              <h2>Acidentes e Ocorrências</h2>
+              <p>Registre os fatos com clareza para que a empresa possa acompanhar e tomar as providências necessárias.</p>
+            </div>
+          </div>
+
+          <div class="occurrence-layout">
+            <section class="occurrence-card occurrence-form-card">
+              <div class="occurrence-card-heading">
+                <div><span>Novo registro</span><h3>Informações da ocorrência</h3></div>
+                <small>Campos marcados são obrigatórios</small>
+              </div>
+
+              <form id="occurrence-form" class="occurrence-form">
+                <div class="occurrence-form-grid">
+                  <div class="occurrence-field">
+                    <label for="occurrence-type">Tipo *</label>
+                    <select id="occurrence-type" required>
+                      <option value="Acidente de trânsito">Acidente de trânsito</option>
+                      <option value="Avaria no veículo">Avaria no veículo</option>
+                      <option value="Ocorrência com carga">Ocorrência com carga</option>
+                      <option value="Segurança do trabalho">Segurança do trabalho</option>
+                      <option value="Dano material">Dano material</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </div>
+                  <div class="occurrence-field">
+                    <label for="occurrence-date">Data *</label>
+                    <input type="date" id="occurrence-date" required>
+                  </div>
+                  <div class="occurrence-field">
+                    <label for="occurrence-time">Horário *</label>
+                    <input type="time" id="occurrence-time" required>
+                  </div>
+                  <div class="occurrence-field occurrence-field-wide">
+                    <label for="occurrence-driver">Motorista / responsável *</label>
+                    <input type="text" id="occurrence-driver" maxlength="100" required>
+                  </div>
+                  <div class="occurrence-field">
+                    <label for="occurrence-vehicle">Veículo / frota *</label>
+                    <input type="text" id="occurrence-vehicle" maxlength="100" placeholder="Ex.: Volvo FH 540" required>
+                  </div>
+                  <div class="occurrence-field">
+                    <label for="occurrence-plate">Placa *</label>
+                    <input type="text" id="occurrence-plate" maxlength="10" class="form-modal-uppercase" placeholder="ABC-1D23" required>
+                  </div>
+                  <div class="occurrence-field occurrence-field-full">
+                    <label for="occurrence-location">Localização *</label>
+                    <div class="occurrence-location-control">
+                      <input type="text" id="occurrence-location" maxlength="180" placeholder="Rodovia, cidade, pátio ou endereço" required>
+                      <button type="button" id="occurrence-location-button" class="occurrence-secondary-button">
+                        <svg class="ui-icon" aria-hidden="true"><use href="#icon-location"></use></svg><span>Usar localização atual</span>
+                      </button>
+                    </div>
+                    <small id="occurrence-location-status">Você também pode informar o local manualmente.</small>
+                    <input type="hidden" id="occurrence-latitude">
+                    <input type="hidden" id="occurrence-longitude">
+                  </div>
+                  <div class="occurrence-field occurrence-field-full">
+                    <label for="occurrence-involved">Pessoas envolvidas</label>
+                    <textarea id="occurrence-involved" maxlength="600" placeholder="Nomes, contatos ou identificação de terceiros, se houver"></textarea>
+                  </div>
+                  <div class="occurrence-field occurrence-field-full">
+                    <label for="occurrence-description">Descrição do ocorrido *</label>
+                    <textarea id="occurrence-description" maxlength="1800" placeholder="Explique o que aconteceu, as condições do local e os danos identificados" required></textarea>
+                  </div>
+                  <div class="occurrence-field occurrence-field-full">
+                    <label for="occurrence-actions">Providências tomadas *</label>
+                    <textarea id="occurrence-actions" maxlength="1200" placeholder="Ex.: sinalização do local, contato com a empresa, atendimento ou remoção do veículo" required></textarea>
+                  </div>
+                </div>
+
+                <div class="occurrence-photo-area">
+                  <div><strong>Fotos</strong><small>Opcional, até 10 imagens</small></div>
+                  <div class="photo-picker">
+                    <input type="file" id="occurrence-photos" multiple accept="image/*" class="photo-picker-input">
+                    <label for="occurrence-photos" class="photo-picker-button occurrence-photo-button">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3 7.2 5H4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3h-3.2L15 3H9Zm3 15.2A5.2 5.2 0 1 1 12 7.8a5.2 5.2 0 0 1 0 10.4Zm0-2A3.2 3.2 0 1 0 12 9.8a3.2 3.2 0 0 0 0 6.4Z"/></svg>
+                      <span>Adicionar fotos</span>
+                    </label>
+                    <span id="occurrence-photos-count" class="photo-picker-count">Nenhuma foto selecionada</span>
+                    <div id="occurrence-photos-preview" class="photo-preview-grid" aria-live="polite"></div>
+                  </div>
+                </div>
+
+                <button type="submit" id="occurrence-submit" class="occurrence-submit-button button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-check"></use></svg><span>Registrar ocorrência</span></button>
+              </form>
+            </section>
+
+            <aside class="occurrence-card occurrence-guidance-card">
+              <span class="occurrence-guidance-label">Em caso de emergência</span>
+              <h3>Priorize a segurança</h3>
+              <ol>
+                <li>Sinalize o local e afaste-se de riscos.</li>
+                <li>Acione socorro e autoridades quando necessário.</li>
+                <li>Comunique a empresa assim que estiver em segurança.</li>
+                <li>Registre fotos apenas se puder fazê-lo com segurança.</li>
+              </ol>
+              <p>Este formulário registra a ocorrência, mas não substitui o contato imediato em situações urgentes.</p>
+            </aside>
+          </div>
+
+          <section class="occurrence-card occurrence-history-card">
+            <div class="occurrence-card-heading occurrence-history-heading">
+              <div><span>Acompanhamento</span><h3 id="occurrence-list-title">Minhas ocorrências</h3></div>
+              <select id="occurrence-status-filter" aria-label="Filtrar ocorrências por status">
+                <option value="todos">Todos os status</option>
+                <option value="Aberta">Abertas</option>
+                <option value="Em análise">Em análise</option>
+                <option value="Concluída">Concluídas</option>
+              </select>
+            </div>
+            <div id="occurrence-list" class="occurrence-list" aria-live="polite"></div>
+          </section>
         </div>
 
         <div id="sec-equipamentos" class="dashboard-section hidden-section epi-page">
@@ -534,8 +703,13 @@
                     <span class="epi-step-label">Posição atual</span>
                     <h3>Estoque por item</h3>
                   </div>
+                  <button type="button" id="epi-export-restock" class="epi-outline-button">Exportar reposição</button>
                 </div>
                 <div id="epi-stock-list" class="epi-stock-list" aria-live="polite"></div>
+                <div class="epi-restock-panel">
+                  <span class="epi-step-label">Lista de reposição</span>
+                  <div id="epi-restock-list" class="epi-restock-list" aria-live="polite"></div>
+                </div>
               </section>
             </div>
 
@@ -570,8 +744,191 @@
             </div>
           </section>
         </div>
+
+        <div id="sec-fechamentos" class="dashboard-section hidden-section meal-close-page">
+          <div class="meal-close-header">
+            <div>
+              <span class="meal-close-eyebrow">Área administrativa</span>
+              <h2>Fechamento diário de refeições</h2>
+              <p>As listas são congeladas após 08:30 para o almoço e 14:00 para a janta.</p>
+            </div>
+            <div class="meal-close-date-field">
+              <label for="meal-close-date">Data</label>
+              <input type="date" id="meal-close-date">
+              <button type="button" id="meal-close-refresh" class="button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"></use></svg><span>Atualizar</span></button>
+            </div>
+          </div>
+
+          <div class="meal-close-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
+            <p>Se nenhum administrador estiver com o portal aberto no horário, o fechamento é concluído automaticamente no próximo acesso. Como novas reservas ficam bloqueadas após o limite, a lista permanece consistente.</p>
+          </div>
+
+          <div class="meal-close-grid">
+            <article class="meal-close-card" data-meal-type="almoco">
+              <div class="meal-close-card-heading">
+                <div><span>Limite 08:30</span><h3>Almoço</h3></div>
+                <span id="meal-close-lunch-status" class="meal-close-status">Carregando</span>
+              </div>
+              <div class="meal-close-total"><span>Total fechado</span><strong id="meal-close-lunch-total">0</strong></div>
+              <div id="meal-close-lunch-list" class="meal-close-list"></div>
+              <button type="button" id="meal-close-lunch-print" class="meal-close-print-button" disabled>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-print"></use></svg><span>Imprimir ou salvar em PDF</span>
+              </button>
+            </article>
+
+            <article class="meal-close-card" data-meal-type="janta">
+              <div class="meal-close-card-heading">
+                <div><span>Limite 14:00</span><h3>Janta</h3></div>
+                <span id="meal-close-dinner-status" class="meal-close-status">Carregando</span>
+              </div>
+              <div class="meal-close-total"><span>Total fechado</span><strong id="meal-close-dinner-total">0</strong></div>
+              <div id="meal-close-dinner-list" class="meal-close-list"></div>
+              <button type="button" id="meal-close-dinner-print" class="meal-close-print-button" disabled>
+                <svg class="ui-icon" aria-hidden="true"><use href="#icon-print"></use></svg><span>Imprimir ou salvar em PDF</span>
+              </button>
+            </article>
+          </div>
+
+          <section class="meal-admin-card meal-close-monthly-card" aria-labelledby="monthly-meals-title">
+            <div class="meal-admin-heading">
+              <span class="meal-admin-heading-icon" aria-hidden="true">
+                <svg class="ui-icon"><use href="#icon-calendar"></use></svg>
+              </span>
+              <div>
+                <h3 id="monthly-meals-title">Controle mensal de refeições</h3>
+                <p>Consulte por mês, filtre por colaborador e ajuste cada dia.</p>
+              </div>
+            </div>
+
+            <div class="monthly-meal-filters">
+              <div class="meal-admin-field">
+                <label for="monthly-meal-month">Mês</label>
+                <input type="month" id="monthly-meal-month">
+              </div>
+              <div class="meal-admin-field">
+                <label for="monthly-meal-user">Colaborador</label>
+                <select id="monthly-meal-user">
+                  <option value="">Todos os colaboradores</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="monthly-meal-summary" aria-live="polite">
+              <div>
+                <span>Almoços</span>
+                <strong id="monthly-meal-lunches">0</strong>
+              </div>
+              <div>
+                <span>Jantas</span>
+                <strong id="monthly-meal-dinners">0</strong>
+              </div>
+            </div>
+
+            <div id="monthly-meals-list" class="monthly-meals-list" aria-live="polite">
+              <p class="text-muted-small">Carregando refeições...</p>
+            </div>
+          </section>
+        </div>
+
+        <div id="sec-relatorios" class="dashboard-section hidden-section reports-page">
+          <div class="reports-header">
+            <div>
+              <span class="reports-eyebrow">Área administrativa</span>
+              <h2>Relatórios e Segurança</h2>
+              <p>Consolide as operações do mês, exporte informações e proteja os dados do portal.</p>
+            </div>
+          </div>
+
+          <section class="reports-filter-card">
+            <div class="reports-filter-field">
+              <label for="report-month">Mês de referência</label>
+              <input type="month" id="report-month">
+            </div>
+            <div class="reports-filter-field">
+              <label for="report-user">Colaborador</label>
+              <select id="report-user">
+                <option value="">Todos os colaboradores</option>
+              </select>
+            </div>
+            <button type="button" id="report-refresh" class="reports-primary-button button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-refresh"></use></svg><span>Atualizar relatório</span></button>
+            <div class="reports-export-actions">
+              <button type="button" id="report-export-excel" class="reports-secondary-button button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-file"></use></svg><span>Exportar Excel (.csv)</span></button>
+              <button type="button" id="report-export-pdf" class="reports-secondary-button button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-print"></use></svg><span>Gerar PDF</span></button>
+            </div>
+          </section>
+
+          <div class="reports-kpis" aria-live="polite">
+            <article><span>Refeições</span><strong id="report-meals-total">0</strong><small id="report-meals-value">R$ 0,00</small></article>
+            <article><span>Entregas de EPI</span><strong id="report-epi-deliveries">0</strong><small>Pedidos retirados</small></article>
+            <article><span>Manutenções</span><strong id="report-maintenance-total">0</strong><small>Chamados no período</small></article>
+            <article><span>Ocorrências</span><strong id="report-occurrence-total">0</strong><small>Registros no período</small></article>
+            <article><span>Movimentações</span><strong id="report-stock-movements">0</strong><small>Entradas e saídas</small></article>
+          </div>
+
+          <div id="reports-loading" class="reports-loading hidden">Preparando relatório...</div>
+
+          <div class="reports-grid">
+            <section class="reports-card reports-card-wide">
+              <div class="reports-card-heading"><div><span>Refeitório</span><h3>Refeições por colaborador</h3></div></div>
+              <div class="reports-table-wrap"><table class="reports-table"><thead><tr><th>Colaborador</th><th>Almoços</th><th>Jantas</th><th>Total</th><th>Valor</th></tr></thead><tbody id="report-meals-body"></tbody></table></div>
+            </section>
+            <section class="reports-card">
+              <div class="reports-card-heading"><div><span>Almoxarifado</span><h3>Entregas de EPI</h3></div></div>
+              <div id="report-epi-list" class="reports-list"></div>
+            </section>
+            <section class="reports-card">
+              <div class="reports-card-heading"><div><span>Frota</span><h3>Manutenções registradas</h3></div></div>
+              <div id="report-maintenance-list" class="reports-list"></div>
+            </section>
+            <section class="reports-card">
+              <div class="reports-card-heading"><div><span>Segurança</span><h3>Acidentes e ocorrências</h3></div></div>
+              <div id="report-occurrence-list" class="reports-list"></div>
+            </section>
+            <section class="reports-card reports-card-wide">
+              <div class="reports-card-heading"><div><span>Estoque</span><h3>Movimentações de EPI</h3></div></div>
+              <div class="reports-table-wrap"><table class="reports-table"><thead><tr><th>Data</th><th>Item</th><th>Movimento</th><th>Quantidade</th><th>Responsável</th></tr></thead><tbody id="report-stock-body"></tbody></table></div>
+            </section>
+          </div>
+
+          <section class="security-panel">
+            <div class="security-heading">
+              <div>
+                <span class="reports-eyebrow">Proteção e recuperação</span>
+                <h2>Segurança dos dados</h2>
+              </div>
+              <span id="app-check-status" class="security-status">Verificando App Check</span>
+            </div>
+
+            <div class="security-grid">
+              <article class="security-card">
+                <h3>Backup administrativo</h3>
+                <p>Baixe uma cópia completa dos dados ou restaure registros sem apagar informações atuais.</p>
+                <div class="security-actions">
+                  <button type="button" id="backup-download" class="reports-primary-button button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-backup"></use></svg><span>Baixar backup</span></button>
+                  <input type="file" id="backup-file" accept="application/json,.json" class="hidden">
+                  <button type="button" id="backup-restore-select" class="reports-secondary-button button-with-icon"><svg class="ui-icon" aria-hidden="true"><use href="#icon-file"></use></svg><span>Selecionar backup</span></button>
+                </div>
+                <small id="backup-status">Recomendação: faça um backup pelo menos uma vez por semana.</small>
+              </article>
+
+              <article class="security-card security-audit-card">
+                <h3>Histórico administrativo</h3>
+                <p>Registro das principais alterações realizadas pelos administradores.</p>
+                <div id="audit-list" class="audit-list" aria-live="polite"></div>
+              </article>
+            </div>
+          </section>
+        </div>
       </main>
 
-  <script type="module" src="app.js?v=20260810-15"></script>
+      <div id="network-status" class="network-status" role="status" aria-live="polite" aria-hidden="true">
+        <span></span>
+        <strong>Modo offline</strong>
+        <small>Os dados salvos serão sincronizados quando a conexão voltar.</small>
+      </div>
+
+  <script type="module" src="pwa.js?v=20260810-2"></script>
+  <script type="module" src="app.js?v=20260810-19"></script>
 </body>
 </html>

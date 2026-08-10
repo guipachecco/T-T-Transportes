@@ -71,11 +71,13 @@ service cloud.firestore {
 
     match /reservas_refeicao/{reservaId} {
       allow read: if estaAutenticado();
-      allow create, update: if estaAutenticado() &&
+      allow create, update: if ehAdmin() || (
+        estaAutenticado() &&
         (
           request.resource.data.colaboradorUid == request.auth.uid ||
           request.resource.data.userId == request.auth.uid
-        );
+        )
+      );
       allow delete: if ehAdmin() || (
         estaAutenticado() &&
         (
@@ -96,14 +98,57 @@ service cloud.firestore {
       allow update, delete: if ehAdmin();
     }
 
+    // Acidentes e ocorrências: o colaborador registra e consulta os próprios
+    // relatos; o administrador acompanha e atualiza o andamento.
+    match /ocorrencias/{ocorrenciaId} {
+      allow read: if ehAdmin() || (
+        estaAutenticado() &&
+        resource.data.colaboradorUid == request.auth.uid
+      );
+
+      allow create: if estaAutenticado() &&
+        request.resource.data.colaboradorUid == request.auth.uid &&
+        request.resource.data.status == 'Aberta' &&
+        request.resource.data.tipo is string &&
+        request.resource.data.data is string &&
+        request.resource.data.hora is string &&
+        request.resource.data.motorista is string &&
+        request.resource.data.veiculo is string &&
+        request.resource.data.placa is string &&
+        request.resource.data.localizacao is string &&
+        request.resource.data.descricao is string &&
+        request.resource.data.providencias is string &&
+        request.resource.data.fotos is list &&
+        request.resource.data.fotos.size() <= 10;
+
+      allow update, delete: if ehAdmin();
+    }
+
+    // Listas definitivas geradas nos horários de corte das refeições.
+    match /fechamentos_refeicoes/{fechamentoId} {
+      allow read: if ehAdmin();
+      allow create: if ehAdmin() &&
+        request.resource.data.data is string &&
+        request.resource.data.tipo in ['almoco', 'janta'] &&
+        request.resource.data.limite in ['08:30', '14:00'] &&
+        request.resource.data.quantidade is int &&
+        request.resource.data.quantidade >= 0 &&
+        request.resource.data.refeicoes is list &&
+        request.resource.data.quantidade == request.resource.data.refeicoes.size();
+
+      // Um fechamento é um retrato definitivo: depois de criado, não pode ser
+      // alterado nem apagado pelo aplicativo.
+      allow update, delete: if false;
+    }
+
     match /marketplace/{anuncioId} {
       allow read: if estaAutenticado();
-      allow create: if estaAutenticado() &&
+      allow create: if ehAdmin() || (estaAutenticado() &&
         (
           request.resource.data.vendedorUid == request.auth.uid ||
           request.resource.data.colaboradorUid == request.auth.uid ||
           request.resource.data.userId == request.auth.uid
-        );
+        ));
       allow update, delete: if ehAdmin() || (
         estaAutenticado() &&
         (
@@ -128,7 +173,7 @@ service cloud.firestore {
         resource.data.colaboradorUid == request.auth.uid
       );
 
-      allow create: if estaAutenticado() &&
+      allow create: if ehAdmin() || (estaAutenticado() &&
         request.resource.data.colaboradorUid == request.auth.uid &&
         intervaloSolicitacaoEpiDisponivel() &&
         request.resource.data.status == 'pendente' &&
@@ -159,7 +204,7 @@ service cloud.firestore {
           'status',
           'criadoEm',
           'atualizadoEm'
-        ]);
+        ]));
 
       allow update: if ehAdmin() || (
         estaAutenticado() &&
@@ -182,6 +227,21 @@ service cloud.firestore {
             request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'avisoAprovacaoVisualizadoEm'
             ])
+          ) ||
+          (
+            resource.data.status == 'retirado' &&
+            request.resource.data.status == 'retirado' &&
+            request.resource.data.entregaConfirmada == true &&
+            request.resource.data.entregaConfirmadaPorUid == request.auth.uid &&
+            request.resource.data.entregaConfirmadaEm == request.time &&
+            request.resource.data.atualizadoEm == request.time &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'entregaConfirmada',
+              'entregaConfirmadaEm',
+              'entregaConfirmadaPorUid',
+              'entregaConfirmadaPorNome',
+              'atualizadoEm'
+            ])
           )
         )
       );
@@ -193,6 +253,26 @@ service cloud.firestore {
     match /movimentacoes_epi/{movimentacaoId} {
       allow read, create: if ehAdmin();
       allow update, delete: if false;
+    }
+
+    // Períodos que suspendem automaticamente as refeições do colaborador.
+    match /afastamentos/{afastamentoId} {
+      allow read: if ehAdmin() || (
+        estaAutenticado() &&
+        resource.data.colaboradorUid == request.auth.uid
+      );
+      allow create, update, delete: if ehAdmin();
+    }
+
+    // Registro imutável das ações administrativas mais importantes.
+    match /auditoria/{registroId} {
+      allow read, create: if ehAdmin();
+      allow update, delete: if false;
+    }
+
+    // Configurações internas, incluindo a data do último backup.
+    match /configuracoes/{configuracaoId} {
+      allow read, write: if ehAdmin();
     }
   }
 }

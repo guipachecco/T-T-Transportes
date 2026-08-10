@@ -21,14 +21,16 @@ import {
   addDoc, 
   query, 
   orderBy, 
+  limit,
   where, 
   onSnapshot, 
   serverTimestamp,
-  runTransaction
+  runTransaction,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Módulos Locais
-import { auth, db } from "./firebase-init.js";
+import { auth, db, appCheckConfigured } from "./firebase-init.js";
 import { solicitarPermissaoNotificacoes, exibirNotificacaoLocal } from "./notificacoes.js";
 import { fazerUploadImagens } from "./imagens.js";
 
@@ -125,6 +127,13 @@ const monthlyMealUser = document.getElementById("monthly-meal-user");
 const monthlyMealLunches = document.getElementById("monthly-meal-lunches");
 const monthlyMealDinners = document.getElementById("monthly-meal-dinners");
 const monthlyMealsList = document.getElementById("monthly-meals-list");
+const absenceForm = document.getElementById("absence-form");
+const absenceUser = document.getElementById("absence-user");
+const absenceType = document.getElementById("absence-type");
+const absenceStart = document.getElementById("absence-start");
+const absenceEnd = document.getElementById("absence-end");
+const absenceReason = document.getElementById("absence-reason");
+const absenceList = document.getElementById("absence-list");
 
 const epiAdminPanel = document.getElementById("epi-admin-panel");
 const epiUserRole = document.getElementById("epi-user-role");
@@ -151,6 +160,66 @@ const epiPendingCount = document.getElementById("epi-pending-count");
 const epiRequestStatusFilter = document.getElementById("epi-request-status-filter");
 const epiAdminRequestsList = document.getElementById("epi-admin-requests-list");
 const epiMovementsList = document.getElementById("epi-movements-list");
+const epiRestockList = document.getElementById("epi-restock-list");
+const epiExportRestock = document.getElementById("epi-export-restock");
+
+const adminReportsMenuButton = document.getElementById("admin-reports-menu-button");
+const reportMonth = document.getElementById("report-month");
+const reportUser = document.getElementById("report-user");
+const reportRefresh = document.getElementById("report-refresh");
+const reportExportExcel = document.getElementById("report-export-excel");
+const reportExportPdf = document.getElementById("report-export-pdf");
+const reportsLoading = document.getElementById("reports-loading");
+const reportMealsTotal = document.getElementById("report-meals-total");
+const reportMealsValue = document.getElementById("report-meals-value");
+const reportEpiDeliveries = document.getElementById("report-epi-deliveries");
+const reportMaintenanceTotal = document.getElementById("report-maintenance-total");
+const reportOccurrenceTotal = document.getElementById("report-occurrence-total");
+const reportStockMovements = document.getElementById("report-stock-movements");
+const reportMealsBody = document.getElementById("report-meals-body");
+const reportEpiList = document.getElementById("report-epi-list");
+const reportMaintenanceList = document.getElementById("report-maintenance-list");
+const reportOccurrenceList = document.getElementById("report-occurrence-list");
+const reportStockBody = document.getElementById("report-stock-body");
+const appCheckStatus = document.getElementById("app-check-status");
+const backupDownload = document.getElementById("backup-download");
+const backupFile = document.getElementById("backup-file");
+const backupRestoreSelect = document.getElementById("backup-restore-select");
+const backupStatus = document.getElementById("backup-status");
+const auditList = document.getElementById("audit-list");
+const adminMealCloseMenuButton = document.getElementById("admin-meal-close-menu-button");
+
+const occurrenceForm = document.getElementById("occurrence-form");
+const occurrenceType = document.getElementById("occurrence-type");
+const occurrenceDate = document.getElementById("occurrence-date");
+const occurrenceTime = document.getElementById("occurrence-time");
+const occurrenceDriver = document.getElementById("occurrence-driver");
+const occurrenceVehicle = document.getElementById("occurrence-vehicle");
+const occurrencePlate = document.getElementById("occurrence-plate");
+const occurrenceLocation = document.getElementById("occurrence-location");
+const occurrenceLocationButton = document.getElementById("occurrence-location-button");
+const occurrenceLocationStatus = document.getElementById("occurrence-location-status");
+const occurrenceLatitude = document.getElementById("occurrence-latitude");
+const occurrenceLongitude = document.getElementById("occurrence-longitude");
+const occurrenceInvolved = document.getElementById("occurrence-involved");
+const occurrenceDescription = document.getElementById("occurrence-description");
+const occurrenceActions = document.getElementById("occurrence-actions");
+const occurrencePhotos = document.getElementById("occurrence-photos");
+const occurrenceSubmit = document.getElementById("occurrence-submit");
+const occurrenceList = document.getElementById("occurrence-list");
+const occurrenceListTitle = document.getElementById("occurrence-list-title");
+const occurrenceStatusFilter = document.getElementById("occurrence-status-filter");
+
+const mealCloseDate = document.getElementById("meal-close-date");
+const mealCloseRefresh = document.getElementById("meal-close-refresh");
+const mealCloseLunchStatus = document.getElementById("meal-close-lunch-status");
+const mealCloseLunchTotal = document.getElementById("meal-close-lunch-total");
+const mealCloseLunchList = document.getElementById("meal-close-lunch-list");
+const mealCloseLunchPrint = document.getElementById("meal-close-lunch-print");
+const mealCloseDinnerStatus = document.getElementById("meal-close-dinner-status");
+const mealCloseDinnerTotal = document.getElementById("meal-close-dinner-total");
+const mealCloseDinnerList = document.getElementById("meal-close-dinner-list");
+const mealCloseDinnerPrint = document.getElementById("meal-close-dinner-print");
 
 // Estado Global da Aplicação
 let currentUserData = null;
@@ -182,6 +251,22 @@ let produtosEpiAbertos = new Set();
 let processandoExpiracoesEpi = false;
 let avisoAprovacaoEpiEmExibicao = false;
 let timerExpiracaoEpi = null;
+let preparandoEstoqueInicialEpi = false;
+let afastamentosUsuarioCache = [];
+let afastamentosAdminCache = [];
+let canceladoresRelatorios = [];
+let auditoriaAdminCache = [];
+let relatorioAdminCache = null;
+let ocorrenciasCache = [];
+let cancelarOuvinteOcorrencias = null;
+let limparPreviewOcorrencias = () => {};
+let timerFechamentoRefeicoes = null;
+let fechamentosExibidos = { almoco: null, janta: null };
+let cancelarOuvinteAvisos = null;
+let cancelarOuvinteManutencoes = null;
+let cancelarOuvinteMarketplace = null;
+let cancelarOuvinteCardapio = null;
+let modulosSecaoIniciados = new Set();
 
 // Configuração do Toast do SweetAlert2
 const Toast = Swal.mixin({
@@ -191,6 +276,32 @@ const Toast = Swal.mixin({
   timer: 3000,
   timerProgressBar: true
 });
+
+const ICONES_INTERFACE = new Set(['notice', 'store', 'maintenance', 'alert', 'meal', 'shirt', 'chart', 'download', 'logout', 'calendar', 'eye', 'check', 'clock', 'camera', 'history', 'refresh', 'print', 'file', 'backup', 'location', 'close']);
+
+function obterIconeInterface(nome, classe = 'ui-icon') {
+  const icone = ICONES_INTERFACE.has(nome) ? nome : 'notice';
+  return `<svg class="${classe}" aria-hidden="true"><use href="#icon-${icone}"></use></svg>`;
+}
+
+function atualizarConteudoBotao(botao, texto, icone = null) {
+  if (!botao) return;
+  botao.innerHTML = `${icone ? obterIconeInterface(icone) : ''}<span>${escaparHtml(texto)}</span>`;
+}
+
+function iniciarModuloDaSecao(secaoId) {
+  if (!currentUserData || modulosSecaoIniciados.has(secaoId)) return;
+
+  if (secaoId === 'marketplace') ouvirMarketplace();
+  if (secaoId === 'refeicoes') ouvirCardapioSemanal();
+  if (secaoId === 'equipamentos') iniciarModuloEpi();
+  if (secaoId === 'ocorrencias') iniciarModuloOcorrencias();
+  if (secaoId === 'relatorios' && currentUserData.role === 'admin') iniciarOuvintesRelatorios();
+
+  if (['marketplace', 'refeicoes', 'equipamentos', 'ocorrencias', 'relatorios'].includes(secaoId)) {
+    modulosSecaoIniciados.add(secaoId);
+  }
+}
 
 // -------------------------------------------------------------
 // CONTROLE DE NAVEGAÇÃO E SIDEBAR (EXPOSTO GLOBALMENTE)
@@ -226,6 +337,10 @@ if (btnCloseSidebar) btnCloseSidebar.addEventListener("click", window.fecharMenu
 if (sidebarOverlay) sidebarOverlay.addEventListener("click", window.fecharMenuSidebar);
 
 window.mostrarSecao = (secaoId) => {
+  if (['relatorios', 'fechamentos'].includes(secaoId) && currentUserData?.role !== 'admin') {
+    secaoId = 'mural';
+  }
+
   const secoes = document.querySelectorAll(".dashboard-section");
   secoes.forEach(sec => {
     sec.classList.remove("active-section");
@@ -236,6 +351,16 @@ window.mostrarSecao = (secaoId) => {
   if (secaoAlvo) {
     secaoAlvo.classList.remove("hidden-section");
     secaoAlvo.classList.add("active-section");
+  }
+
+  iniciarModuloDaSecao(secaoId);
+
+  if (secaoId === 'relatorios' && currentUserData?.role === 'admin') {
+    carregarRelatoriosAdmin();
+  }
+
+  if (secaoId === 'fechamentos' && currentUserData?.role === 'admin') {
+    carregarPainelFechamentoRefeicoes();
   }
 
   window.fecharMenuSidebar();
@@ -261,21 +386,31 @@ function acessarDashboard(user) {
   if (sidebarUserRole) sidebarUserRole.textContent = currentUserData.role === 'admin' ? 'Administrador' : 'Colaborador';
 
   const isAdmin = currentUserData.role === "admin";
-  if (adminPanel) adminPanel.style.display = isAdmin ? "block" : "none";
-  if (adminMenuPanel) adminMenuPanel.style.display = isAdmin ? "block" : "none";
+  if (adminPanel) adminPanel.classList.toggle("hidden", !isAdmin);
+  if (adminMenuPanel) adminMenuPanel.classList.toggle("hidden", !isAdmin);
   if (personalMealKpis) personalMealKpis.style.display = "grid";
   if (epiAdminPanel) epiAdminPanel.classList.toggle('hidden', !isAdmin);
+  if (adminReportsMenuButton) adminReportsMenuButton.classList.toggle('hidden', !isAdmin);
+  if (adminMealCloseMenuButton) adminMealCloseMenuButton.classList.toggle('hidden', !isAdmin);
+  if (reportMonth && !reportMonth.value) reportMonth.value = obterMesAtualIso();
+  if (appCheckStatus) {
+    appCheckStatus.textContent = appCheckConfigured ? 'App Check configurado' : 'App Check aguardando chave';
+    appCheckStatus.classList.toggle('configured', appCheckConfigured);
+  }
   if (epiUserRole && ['motorista', 'administrativo', 'operacional'].includes(currentUserData.cargoEpi)) {
     epiUserRole.value = currentUserData.cargoEpi;
   }
 
   mostrarTelaAutenticacao(dashboardScreen);
+  window.mostrarSecao('mural');
   iniciarOuvintesTempoReal();
   solicitarPermissaoNotificacoes(user).finally(agendarLembreteAlmoco);
 
   const secaoSolicitada = new URLSearchParams(window.location.search).get('secao');
-  if (secaoSolicitada === 'refeicoes') {
-    window.mostrarSecao('refeicoes');
+  const secoesPermitidas = ['mural', 'marketplace', 'refeicoes', 'equipamentos', 'ocorrencias'];
+  if (currentUserData?.role === 'admin') secoesPermitidas.push('relatorios', 'fechamentos');
+  if (secoesPermitidas.includes(secaoSolicitada)) {
+    window.mostrarSecao(secaoSolicitada);
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 }
@@ -327,9 +462,13 @@ onAuthStateChanged(auth, async (user) => {
     }
   } else {
     cancelarLembreteAlmoco();
+    encerrarOuvintesConteudo();
     encerrarOuvintesEpi();
     encerrarOuvintesRefeicoesUsuario();
     encerrarOuvintesRefeicoesAdmin();
+    encerrarOuvintesRelatorios();
+    encerrarOuvinteOcorrencias();
+    encerrarFechamentoAutomaticoRefeicoes();
     currentUserData = null;
     currentUserDocRef = null;
     datasReservadasUsuario = new Set();
@@ -347,10 +486,16 @@ onAuthStateChanged(auth, async (user) => {
     minhasSolicitacoesEpiCache = [];
     solicitacoesEpiAdminCache = [];
     movimentacoesEpiCache = [];
+    afastamentosUsuarioCache = [];
+    afastamentosAdminCache = [];
+    auditoriaAdminCache = [];
+    relatorioAdminCache = null;
+    limparInterfaceRelatorios();
     carrinhoEpi.clear();
     selecoesEpi.clear();
     produtosEpiAbertos.clear();
     processandoExpiracoesEpi = false;
+    preparandoEstoqueInicialEpi = false;
     avisoAprovacaoEpiEmExibicao = false;
     if (timerExpiracaoEpi) window.clearTimeout(timerExpiracaoEpi);
     timerExpiracaoEpi = null;
@@ -489,17 +634,29 @@ if (btnLogoutSidebar) {
 function iniciarOuvintesTempoReal() {
   ouvirAvisos();
   ouvirManutencoes();
-  ouvirMarketplace();
   ouvirReservasDoUsuario();
-  ouvirCardapioSemanal();
   ouvirRefeicoesDoMes();
   iniciarModuloEpi();
+  modulosSecaoIniciados.add('equipamentos');
 
   if (currentUserData?.role === 'admin') {
     iniciarGestaoAdminRefeicoes();
   } else {
     encerrarOuvintesRefeicoesAdmin();
+    encerrarOuvintesRelatorios();
+    encerrarFechamentoAutomaticoRefeicoes();
   }
+}
+
+function encerrarOuvintesConteudo() {
+  [cancelarOuvinteAvisos, cancelarOuvinteManutencoes, cancelarOuvinteMarketplace, cancelarOuvinteCardapio]
+    .filter((cancelar) => typeof cancelar === 'function')
+    .forEach((cancelar) => cancelar());
+  cancelarOuvinteAvisos = null;
+  cancelarOuvinteManutencoes = null;
+  cancelarOuvinteMarketplace = null;
+  cancelarOuvinteCardapio = null;
+  modulosSecaoIniciados.clear();
 }
 
 // --- MURAL DE AVISOS ---
@@ -572,7 +729,7 @@ if (noticeForm) {
         }
       }
 
-      await addDoc(collection(db, "avisos"), {
+      const avisoRef = await addDoc(collection(db, "avisos"), {
         titulo,
         conteudo,
         imagemUrl,
@@ -581,6 +738,7 @@ if (noticeForm) {
         autorNome: currentUserData.nome || currentUserData.email,
         criadoEm: serverTimestamp()
       });
+      await registrarAuditoria('aviso_publicado', 'avisos', { avisoId: avisoRef.id, titulo, possuiImagem: Boolean(imagemUrl) });
 
       noticeForm.reset();
       Toast.fire({ icon: 'success', title: 'Aviso publicado com sucesso!' });
@@ -616,9 +774,10 @@ function obterImagemAviso(item) {
 
 function ouvirAvisos() {
   if (!avisosList) return;
-  const q = query(collection(db, "avisos"), orderBy("criadoEm", "desc"));
+  if (cancelarOuvinteAvisos) cancelarOuvinteAvisos();
+  const q = query(collection(db, "avisos"), orderBy("criadoEm", "desc"), limit(40));
 
-  onSnapshot(q, (snapshot) => {
+  cancelarOuvinteAvisos = onSnapshot(q, (snapshot) => {
     avisosList.innerHTML = "";
     if (snapshot.empty) {
       avisosList.innerHTML = `<p class="text-muted-small">Nenhum aviso no momento.</p>`;
@@ -651,7 +810,7 @@ function ouvirAvisos() {
       
       grupoDiv.innerHTML = `
         <div class="aviso-data-header" style="font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #0284C7; display: flex; align-items: center; gap: 6px;">
-          <span>📅</span> ${data}
+          ${obterIconeInterface('calendar')}<span>${data}</span>
         </div>
       `;
 
@@ -672,7 +831,7 @@ function ouvirAvisos() {
           if (listaLeituras.length > 0) {
             leitoresHtml = `
               <div class="aviso-leitores-admin" style="margin-top: 12px; font-size: 0.8rem; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                <strong style="color: #334155; display: block; margin-bottom: 4px;">👁️ Leitores (${listaLeituras.length}):</strong>
+                <strong class="inline-icon-label" style="color: #334155; margin-bottom: 4px;">${obterIconeInterface('eye')}<span>Leitores (${listaLeituras.length}):</span></strong>
                 <ul style="margin: 0; padding-left: 16px; color: #475569;">
                   ${listaLeituras.map(leitor => {
                     const nomeLeitor = typeof leitor === 'object' ? (leitor.nome || leitor.email || leitor.uid) : leitor;
@@ -691,7 +850,7 @@ function ouvirAvisos() {
           } else {
             leitoresHtml = `
               <div class="aviso-leitores-admin" style="margin-top: 12px; font-size: 0.8rem; background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; color: #64748B;">
-                👁️ Nenhuma leitura registrada ainda.
+                <span class="inline-icon-label">${obterIconeInterface('eye')}<span>Nenhuma leitura registrada ainda.</span></span>
               </div>
             `;
           }
@@ -709,7 +868,7 @@ function ouvirAvisos() {
 
           ${imagemAviso ? `
             <div class="aviso-imagem-wrapper">
-              <img src="${imagemAviso}" alt="Foto do aviso: ${item.titulo || 'Aviso'}" class="aviso-imagem">
+              <img src="${imagemAviso}" alt="Foto do aviso: ${item.titulo || 'Aviso'}" class="aviso-imagem" loading="lazy" decoding="async">
             </div>
           ` : ''}
           
@@ -718,7 +877,7 @@ function ouvirAvisos() {
             
             <div style="display: flex; gap: 8px; align-items: center;">
               ${!isAdmin && !jaLeu ? `<button onclick="confirmarLeituraAviso('${item.id}')" class="btn btn-sm btn-primary" style="font-size: 0.8rem; padding: 6px 12px; font-weight: 600;">Marcar como Lido</button>` : ''}
-              ${!isAdmin && jaLeu ? `<span style="color: #10b981; font-weight: 600; font-size: 0.8rem; background: #ecfdf5; padding: 4px 8px; border-radius: 4px;">✓ Lido</span>` : ''}
+              ${!isAdmin && jaLeu ? `<span class="inline-icon-label" style="color: #10b981; font-weight: 600; font-size: 0.8rem; background: #ecfdf5; padding: 4px 8px; border-radius: 4px;">${obterIconeInterface('check')}<span>Lido</span></span>` : ''}
               ${isAdmin ? `<button onclick="excluirAviso('${item.id}')" class="btn btn-sm btn-danger" style="font-size: 0.75rem; padding: 4px 10px;">Excluir Aviso</button>` : ''}
             </div>
           </div>
@@ -746,6 +905,7 @@ window.excluirAviso = async (anuncioId) => {
   if (result.isConfirmed) {
     try {
       await deleteDoc(doc(db, "avisos", anuncioId));
+      await registrarAuditoria('aviso_excluido', 'avisos', { avisoId: anuncioId });
       Toast.fire({ icon: 'success', title: 'Aviso excluído com sucesso!' });
     } catch (error) {
       Swal.fire({ icon: 'error', title: 'Erro ao excluir', text: error.message });
@@ -776,8 +936,38 @@ window.confirmarLeitura = window.confirmarLeituraAviso;
 // GESTÃO DE MANUTENÇÃO / SOS
 // =============================================================
 
-// Número padrão para recebimento dos chamados de manutenção via WhatsApp
-const NUMERO_WHATSAPP_MANUTENCAO = "554792887603";
+async function compartilharMensagemNoGrupo(mensagem) {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Chamado de manutenção - T&T Transportes',
+        text: mensagem
+      });
+      return true;
+    } catch (error) {
+      if (error?.name === 'AbortError') return false;
+      console.warn('Compartilhamento nativo indisponível:', error);
+    }
+  }
+
+  const urlCompartilhamento = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`;
+  const janela = window.open(urlCompartilhamento, '_blank', 'noopener');
+  if (janela) return true;
+
+  try {
+    await navigator.clipboard.writeText(mensagem);
+    await Swal.fire({
+      icon: 'info',
+      title: 'Mensagem copiada',
+      text: 'Abra o grupo da manutenção no WhatsApp e cole a mensagem.',
+      confirmButtonColor: '#25D366'
+    });
+    return true;
+  } catch (error) {
+    Swal.fire({ icon: 'warning', title: 'Copie a mensagem manualmente', text: mensagem, confirmButtonColor: '#0F172A' });
+    return false;
+  }
+}
 
 function configurarSeletorFotos({ inputId, previewId, countId, limite = 10 }) {
   const input = document.getElementById(inputId);
@@ -1002,30 +1192,31 @@ window.abrirReporteManutencao = () => {
         });
 
         // 2. Formata mensagem para o WhatsApp
-        let mensagemWhats = `🛠️ *NOVO CHAMADO DE MANUTENÇÃO*\n\n`;
-        mensagemWhats += `👤 *Solicitante:* ${currentUserData?.nome || currentUserData?.email || 'Colaborador'}\n`;
-        mensagemWhats += `🚚 *Veículo:* ${veiculo} (Placa: ${placa})\n`;
-        mensagemWhats += `🏷️ *Tipo:* ${tipo}\n`;
-        mensagemWhats += `⚠️ *Prioridade:* ${prioridade}\n`;
-        mensagemWhats += `📅 *Data/Hora:* ${dataFormatada} às ${horaFormatada}\n\n`;
-        mensagemWhats += `📝 *Descrição:* ${descricao}\n`;
+        let mensagemWhats = `*NOVO CHAMADO DE MANUTENÇÃO*\n\n`;
+        mensagemWhats += `*Solicitante:* ${currentUserData?.nome || currentUserData?.email || 'Colaborador'}\n`;
+        mensagemWhats += `*Veículo:* ${veiculo} (Placa: ${placa})\n`;
+        mensagemWhats += `*Tipo:* ${tipo}\n`;
+        mensagemWhats += `*Prioridade:* ${prioridade}\n`;
+        mensagemWhats += `*Data/Hora:* ${dataFormatada} às ${horaFormatada}\n\n`;
+        mensagemWhats += `*Descrição:* ${descricao}\n`;
 
         if (fotosUrls.length > 0) {
-          mensagemWhats += `\n🖼️ *Fotos do problema:*\n` + fotosUrls.join('\n');
+          mensagemWhats += `\n*Fotos do problema:*\n` + fotosUrls.join('\n');
         }
 
-        // 3. Abre o WhatsApp diretamente
-        const urlWhats = `https://wa.me/${NUMERO_WHATSAPP_MANUTENCAO}?text=${encodeURIComponent(mensagemWhats)}`;
-
-        await Swal.fire({
+        const confirmacaoCompartilhamento = await Swal.fire({
           icon: 'success',
           title: 'Manutenção Registrada!',
-          text: 'O chamado foi salvo no painel e agora será aberto o WhatsApp para envio direto.',
-          confirmButtonText: 'Abrir WhatsApp',
+          text: 'O chamado foi salvo. Compartilhe a mensagem e escolha o grupo de manutenção no WhatsApp.',
+          confirmButtonText: 'Compartilhar no grupo',
+          showCancelButton: true,
+          cancelButtonText: 'Agora não',
           confirmButtonColor: '#25D366'
         });
 
-        window.open(urlWhats, '_blank');
+        if (confirmacaoCompartilhamento.isConfirmed) {
+          await compartilharMensagemNoGrupo(mensagemWhats);
+        }
 
       } catch (error) {
         Swal.fire({
@@ -1043,15 +1234,17 @@ window.abrirReporteManutencao = () => {
 // -------------------------------------------------------------
 function ouvirManutencoes() {
   if (!manutencoesList) return;
+  if (cancelarOuvinteManutencoes) cancelarOuvinteManutencoes();
 
   // Busca apenas pendentes direto do banco (requer o índice gerado no Firebase)
   const q = query(
     collection(db, "manutencoes"), 
     where("status", "==", "Pendente"),
-    orderBy("criadoEm", "desc")
+    orderBy("criadoEm", "desc"),
+    limit(100)
   );
 
-  onSnapshot(q, (snapshot) => {
+  cancelarOuvinteManutencoes = onSnapshot(q, (snapshot) => {
     manutencoesList.innerHTML = "";
 
     if (totalManutencoesElement) {
@@ -1059,7 +1252,7 @@ function ouvirManutencoes() {
     }
 
     if (snapshot.empty) {
-      manutencoesList.innerHTML = `<p class="text-muted-small" style="grid-column: 1/-1; text-align: center; padding: 20px;">Nenhuma manutenção pendente no momento. 🎉</p>`;
+      manutencoesList.innerHTML = `<p class="text-muted-small" style="grid-column: 1/-1; text-align: center; padding: 20px;">Nenhuma manutenção pendente no momento.</p>`;
       return;
     }
 
@@ -1086,14 +1279,14 @@ function criarCardManutencao(id, item, eHistorico = false) {
   if (item.fotos && item.fotos.length > 0) {
     fotosHtml = `
       <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-        ${item.fotos.map(url => `<a href="${url}" target="_blank"><img src="${url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;"></a>`).join('')}
+        ${item.fotos.map(url => `<a href="${url}" target="_blank"><img src="${url}" loading="lazy" decoding="async" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;"></a>`).join('')}
       </div>
     `;
   }
 
   card.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-      <span class="kpi-label" style="font-weight: 600; color: #64748B;">🕒 ${dataHora}</span>
+      <span class="kpi-label inline-icon-label" style="font-weight: 600; color: #64748B;">${obterIconeInterface('clock')}<span>${dataHora}</span></span>
       <span style="background: ${prioridadeCor}; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${item.prioridade}</span>
     </div>
     <h4 style="margin: 6px 0; color: #0F172A;">${item.veiculo} - <span style="color: #0284C7;">${item.placa}</span></h4>
@@ -1104,13 +1297,13 @@ function criarCardManutencao(id, item, eHistorico = false) {
 
     ${!eHistorico ? `
       <div style="margin-top: 12px; display: flex; gap: 8px;">
-        <button onclick="marcarManutencaoConcluida('${id}')" class="btn" style="background: #10B981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; flex: 1;">
-          ✓ Marcar como Concluído
+        <button onclick="marcarManutencaoConcluida('${id}')" class="btn button-with-icon" style="background: #10B981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; flex: 1;">
+          ${obterIconeInterface('check')}<span>Marcar como Concluído</span>
         </button>
       </div>
     ` : `
-      <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; color: #10B981; font-weight: 600; font-size: 0.85rem;">
-        ✅ Concluído
+      <div class="inline-icon-label" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; color: #10B981; font-weight: 600; font-size: 0.85rem;">
+        ${obterIconeInterface('check')}<span>Concluído</span>
       </div>
     `}
   `;
@@ -1174,8 +1367,11 @@ window.marcarManutencaoConcluida = async (id) => {
   try {
     await updateDoc(doc(db, "manutencoes", id), {
       status: "Concluído",
-      concluidoEm: serverTimestamp()
+      concluidoEm: serverTimestamp(),
+      concluidoPorUid: currentUserData?.uid || '',
+      concluidoPorNome: currentUserData?.nome || currentUserData?.email || 'Administrador'
     });
+    await registrarAuditoria('manutencao_concluida', 'manutencoes', { manutencaoId: id });
 
     Swal.fire({
       icon: 'success',
@@ -1188,6 +1384,258 @@ window.marcarManutencaoConcluida = async (id) => {
     Swal.fire({ icon: 'error', title: 'Erro', text: error.message });
   }
 };
+
+// =============================================================
+// ACIDENTES E OCORRÊNCIAS
+// =============================================================
+function encerrarOuvinteOcorrencias() {
+  if (cancelarOuvinteOcorrencias) cancelarOuvinteOcorrencias();
+  cancelarOuvinteOcorrencias = null;
+  limparPreviewOcorrencias();
+  limparPreviewOcorrencias = () => {};
+}
+
+function obterHorarioAtualInput() {
+  const agora = new Date();
+  return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+}
+
+function prepararFormularioOcorrencia() {
+  if (!occurrenceForm) return;
+  if (!occurrenceDate.value) occurrenceDate.value = obterDataLocalIso();
+  if (!occurrenceTime.value) occurrenceTime.value = obterHorarioAtualInput();
+  if (!occurrenceDriver.value) occurrenceDriver.value = currentUserData?.nome || currentUserData?.email || '';
+
+  limparPreviewOcorrencias();
+  limparPreviewOcorrencias = configurarSeletorFotos({
+    inputId: 'occurrence-photos',
+    previewId: 'occurrence-photos-preview',
+    countId: 'occurrence-photos-count',
+    limite: 10
+  });
+}
+
+function obterDataOcorrencia(item) {
+  if (item?.ocorridoEm?.toDate) return item.ocorridoEm.toDate();
+  if (item?.data && item?.hora) {
+    const data = new Date(`${item.data}T${item.hora}:00`);
+    if (!Number.isNaN(data.getTime())) return data;
+  }
+  if (item?.criadoEm?.toDate) return item.criadoEm.toDate();
+  return new Date(0);
+}
+
+function obterClasseStatusOcorrencia(status) {
+  if (status === 'Concluída') return 'done';
+  if (status === 'Em análise') return 'review';
+  return 'open';
+}
+
+function renderizarOcorrencias() {
+  if (!occurrenceList) return;
+  const filtro = occurrenceStatusFilter?.value || 'todos';
+  const registros = ocorrenciasCache
+    .filter((item) => filtro === 'todos' || item.status === filtro)
+    .sort((a, b) => obterDataOcorrencia(b) - obterDataOcorrencia(a));
+
+  occurrenceList.replaceChildren();
+  if (occurrenceListTitle) {
+    occurrenceListTitle.textContent = currentUserData?.role === 'admin' ? 'Ocorrências da empresa' : 'Minhas ocorrências';
+  }
+
+  if (registros.length === 0) {
+    const vazio = document.createElement('p');
+    vazio.className = 'occurrence-list-empty';
+    vazio.textContent = 'Nenhuma ocorrência encontrada neste filtro.';
+    occurrenceList.appendChild(vazio);
+    return;
+  }
+
+  registros.forEach((item) => {
+    const card = document.createElement('article');
+    card.className = 'occurrence-record';
+    const dataHora = obterDataOcorrencia(item).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    const coordenadasValidas = Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude));
+    const linkMapa = coordenadasValidas
+      ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(`${item.latitude},${item.longitude}`)}" target="_blank" rel="noopener">Abrir no mapa</a>`
+      : '';
+    const fotosHtml = Array.isArray(item.fotos) && item.fotos.length
+      ? `<div class="occurrence-record-photos">${item.fotos.map((url, indice) => `<a href="${escaparHtml(url)}" target="_blank" rel="noopener"><img src="${escaparHtml(url)}" alt="Foto ${indice + 1} da ocorrência" loading="lazy" decoding="async"></a>`).join('')}</div>`
+      : '';
+    const pendenteHtml = item.pendenteSincronizacao
+      ? '<span class="occurrence-type-tag">Aguardando sincronização</span>'
+      : '';
+    const acoesAdmin = currentUserData?.role === 'admin'
+      ? `
+          ${item.status !== 'Em análise' ? `<button type="button" class="occurrence-action-button" onclick="atualizarStatusOcorrencia('${item.id}', 'Em análise')">Marcar em análise</button>` : ''}
+          ${item.status !== 'Concluída' ? `<button type="button" class="occurrence-action-button" onclick="atualizarStatusOcorrencia('${item.id}', 'Concluída')">Concluir</button>` : ''}
+          ${item.status !== 'Aberta' ? `<button type="button" class="occurrence-action-button" onclick="atualizarStatusOcorrencia('${item.id}', 'Aberta')">Reabrir</button>` : ''}
+        `
+      : '';
+
+    card.innerHTML = `
+      <div>
+        <div class="occurrence-record-top">
+          <span class="occurrence-status ${obterClasseStatusOcorrencia(item.status)}">${escaparHtml(item.status || 'Aberta')}</span>
+          <span class="occurrence-type-tag">${escaparHtml(item.tipo || 'Ocorrência')}</span>
+          ${pendenteHtml}
+        </div>
+        <h4>${escaparHtml(item.veiculo || 'Veículo')} · ${escaparHtml(item.placa || '')}</h4>
+        <p><strong>Motorista:</strong> ${escaparHtml(item.motorista || item.colaboradorNome || 'Não informado')}<br><strong>Local:</strong> ${escaparHtml(item.localizacao || 'Não informado')} ${linkMapa}</p>
+        <p>${escaparHtml(item.descricao || '')}</p>
+        ${item.envolvidos ? `<p><strong>Envolvidos:</strong> ${escaparHtml(item.envolvidos)}</p>` : ''}
+        <p><strong>Providências:</strong> ${escaparHtml(item.providencias || 'Não informadas')}</p>
+        ${fotosHtml}
+        <small>Registrado por ${escaparHtml(item.colaboradorNome || 'Colaborador')} · ${dataHora}</small>
+      </div>
+      <div class="occurrence-record-actions">${acoesAdmin}</div>
+    `;
+    occurrenceList.appendChild(card);
+  });
+}
+
+function iniciarModuloOcorrencias() {
+  if (!currentUserData?.uid || !occurrenceList) return;
+  encerrarOuvinteOcorrencias();
+  prepararFormularioOcorrencia();
+
+  const referencia = currentUserData.role === 'admin'
+    ? collection(db, 'ocorrencias')
+    : query(collection(db, 'ocorrencias'), where('colaboradorUid', '==', currentUserData.uid));
+
+  cancelarOuvinteOcorrencias = onSnapshot(referencia, { includeMetadataChanges: true }, (snapshot) => {
+    ocorrenciasCache = snapshot.docs.map((documento) => ({
+      id: documento.id,
+      ...documento.data(),
+      pendenteSincronizacao: documento.metadata.hasPendingWrites
+    }));
+    renderizarOcorrencias();
+  }, (error) => {
+    console.error('Erro ao acompanhar ocorrências:', error);
+    occurrenceList.innerHTML = '<p class="occurrence-list-empty">Não foi possível carregar as ocorrências.</p>';
+  });
+}
+
+if (occurrenceLocationButton) {
+  occurrenceLocationButton.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      Swal.fire({ icon: 'info', title: 'Localização indisponível', text: 'Digite o endereço ou local manualmente.', confirmButtonColor: '#0F172A' });
+      return;
+    }
+
+    occurrenceLocationButton.disabled = true;
+    if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Obtendo localização do aparelho...';
+    navigator.geolocation.getCurrentPosition((posicao) => {
+      const latitude = Number(posicao.coords.latitude).toFixed(6);
+      const longitude = Number(posicao.coords.longitude).toFixed(6);
+      occurrenceLatitude.value = latitude;
+      occurrenceLongitude.value = longitude;
+      if (!occurrenceLocation.value.trim()) occurrenceLocation.value = `Coordenadas ${latitude}, ${longitude}`;
+      if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Localização capturada. Você pode complementar o endereço acima.';
+      occurrenceLocationButton.disabled = false;
+    }, () => {
+      if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Não foi possível obter a localização. Informe o local manualmente.';
+      occurrenceLocationButton.disabled = false;
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  });
+}
+
+if (occurrenceForm) {
+  occurrenceForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!currentUserData?.uid) return;
+
+    let files = Array.from(occurrencePhotos?.files || []);
+    if (files.length > 10) {
+      Swal.fire({ icon: 'warning', title: 'Limite de fotos excedido', text: 'Selecione no máximo 10 imagens.', confirmButtonColor: '#0F172A' });
+      return;
+    }
+
+    if (!navigator.onLine && files.length > 0) {
+      const resposta = await Swal.fire({
+        icon: 'info',
+        title: 'Fotos precisam de conexão',
+        text: 'Você pode guardar o registro agora sem as fotos ou cancelar e tentar novamente quando a internet voltar.',
+        showCancelButton: true,
+        confirmButtonText: 'Registrar sem fotos',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#0F172A'
+      });
+      if (!resposta.isConfirmed) return;
+      files = [];
+    }
+
+    occurrenceSubmit.disabled = true;
+    atualizarConteudoBotao(occurrenceSubmit, navigator.onLine ? 'Registrando...' : 'Preparando sincronização...', 'check');
+
+    try {
+      const fotos = files.length ? await fazerUploadImagens(files) : [];
+      const data = occurrenceDate.value;
+      const hora = occurrenceTime.value;
+      const ocorridoEm = Timestamp.fromDate(new Date(`${data}T${hora}:00`));
+      const dados = {
+        tipo: occurrenceType.value,
+        data,
+        hora,
+        ocorridoEm,
+        motorista: occurrenceDriver.value.trim(),
+        veiculo: occurrenceVehicle.value.trim(),
+        placa: occurrencePlate.value.trim().toUpperCase(),
+        localizacao: occurrenceLocation.value.trim(),
+        latitude: occurrenceLatitude.value ? Number(occurrenceLatitude.value) : null,
+        longitude: occurrenceLongitude.value ? Number(occurrenceLongitude.value) : null,
+        envolvidos: occurrenceInvolved.value.trim(),
+        descricao: occurrenceDescription.value.trim(),
+        providencias: occurrenceActions.value.trim(),
+        fotos,
+        status: 'Aberta',
+        colaboradorUid: currentUserData.uid,
+        colaboradorNome: currentUserData.nome || currentUserData.email || 'Colaborador',
+        criadoEm: serverTimestamp(),
+        atualizadoEm: serverTimestamp()
+      };
+
+      const salvamento = addDoc(collection(db, 'ocorrencias'), dados);
+      if (navigator.onLine) {
+        await salvamento;
+        Toast.fire({ icon: 'success', title: 'Ocorrência registrada.' });
+      } else {
+        salvamento.catch((error) => console.error('Erro ao sincronizar ocorrência:', error));
+        Toast.fire({ icon: 'info', title: 'Ocorrência aguardando conexão.' });
+      }
+
+      occurrenceForm.reset();
+      occurrenceLatitude.value = '';
+      occurrenceLongitude.value = '';
+      if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Você também pode informar o local manualmente.';
+      prepararFormularioOcorrencia();
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Não foi possível registrar', text: error.message, confirmButtonColor: '#0F172A' });
+    } finally {
+      occurrenceSubmit.disabled = false;
+      atualizarConteudoBotao(occurrenceSubmit, 'Registrar ocorrência', 'check');
+    }
+  });
+}
+
+if (occurrenceStatusFilter) occurrenceStatusFilter.addEventListener('change', renderizarOcorrencias);
+
+window.atualizarStatusOcorrencia = async (ocorrenciaId, novoStatus) => {
+  if (currentUserData?.role !== 'admin' || !['Aberta', 'Em análise', 'Concluída'].includes(novoStatus)) return;
+  try {
+    await updateDoc(doc(db, 'ocorrencias', ocorrenciaId), {
+      status: novoStatus,
+      atualizadoEm: serverTimestamp(),
+      atualizadoPorUid: currentUserData.uid,
+      atualizadoPorNome: currentUserData.nome || currentUserData.email
+    });
+    await registrarAuditoria('ocorrencia_status_alterado', 'ocorrencias', { ocorrenciaId, status: novoStatus });
+    Toast.fire({ icon: 'success', title: `Ocorrência marcada como ${novoStatus.toLowerCase()}.` });
+  } catch (error) {
+    Swal.fire({ icon: 'error', title: 'Não foi possível atualizar', text: error.message, confirmButtonColor: '#0F172A' });
+  }
+};
+
 // --- MARKETPLACE / FEIRINHA ---
 window.abrirModalNovoAnuncioMarketplace = async () => {
   let limparPreviewMarketplace = () => {};
@@ -1371,7 +1819,7 @@ window.abrirGaleriaFotos = function(imagens, indexInicial = 0) {
       `,
       showCancelButton: imagens.length > 1,
       showConfirmButton: imagens.length > 1,
-      confirmButtonText: 'Próxima ➔',
+      confirmButtonText: 'Próxima',
       cancelButtonText: '⬅ Anterior',
       reverseButtons: true,
       showCloseButton: true,
@@ -1394,9 +1842,10 @@ window.abrirGaleriaFotos = function(imagens, indexInicial = 0) {
 
 function ouvirMarketplace() {
   if (!marketplaceList) return;
-  const q = query(collection(db, "marketplace"), orderBy("criadoEm", "desc"));
+  if (cancelarOuvinteMarketplace) cancelarOuvinteMarketplace();
+  const q = query(collection(db, "marketplace"), orderBy("criadoEm", "desc"), limit(60));
 
-  onSnapshot(q, (snapshot) => {
+  cancelarOuvinteMarketplace = onSnapshot(q, (snapshot) => {
     marketplaceList.innerHTML = "";
     if (snapshot.empty) {
       marketplaceList.innerHTML = `<p class="text-muted-small">Nenhum anúncio ativo no momento.</p>`;
@@ -1428,13 +1877,13 @@ function ouvirMarketplace() {
       card.innerHTML = `
         ${listaFotos.length > 0 ? `
           <div class="mk-cover-container" onclick="abrirGaleriaFotos(${jsonFotos}, 0)" style="cursor: pointer;">
-            <img src="${listaFotos[0]}" class="mk-main-image" alt="${item.titulo}">
-            ${listaFotos.length > 1 ? `<span class="mk-photo-badge">📷 1/${listaFotos.length} (Ver todas)</span>` : ''}
+            <img src="${listaFotos[0]}" class="mk-main-image" alt="${item.titulo}" loading="lazy" decoding="async">
+            ${listaFotos.length > 1 ? `<span class="mk-photo-badge inline-icon-label">${obterIconeInterface('camera')}<span>1/${listaFotos.length} (Ver todas)</span></span>` : ''}
           </div>
           ${listaFotos.length > 1 ? `
             <div class="mk-thumbnails-strip">
               ${listaFotos.map((url, idx) => `
-                <img src="${url}" class="mk-thumb-img" onclick="event.stopPropagation(); abrirGaleriaFotos(${jsonFotos}, ${idx})" alt="Foto ${idx + 1}">
+                <img src="${url}" class="mk-thumb-img" onclick="event.stopPropagation(); abrirGaleriaFotos(${jsonFotos}, ${idx})" alt="Foto ${idx + 1}" loading="lazy" decoding="async">
               `).join('')}
             </div>
           ` : ''}
@@ -1651,14 +2100,14 @@ function agruparEstoqueEpi() {
     .sort((a, b) => a.ordem - b.ordem);
 }
 
-async function garantirEstoqueInicialEpi() {
-  if (currentUserData?.role !== 'admin') return;
+async function garantirEstoqueInicialEpi(idsExistentes = new Set()) {
+  if (currentUserData?.role !== 'admin' || preparandoEstoqueInicialEpi) return;
+  const itensFaltantes = ESTOQUE_EPI_INICIAL.filter((item) => !idsExistentes.has(item.id));
+  if (itensFaltantes.length === 0) return;
+  preparandoEstoqueInicialEpi = true;
 
   try {
-    const snapshot = await getDocs(collection(db, 'estoque_epi'));
-    const idsExistentes = new Set(snapshot.docs.map((docSnap) => docSnap.id));
-
-    await Promise.all(ESTOQUE_EPI_INICIAL.map((item) => {
+    await Promise.all(itensFaltantes.map((item) => {
       const referencia = doc(db, 'estoque_epi', item.id);
       const dadosCatalogo = {
         produtoId: item.produtoId,
@@ -1670,14 +2119,11 @@ async function garantirEstoqueInicialEpi() {
         atualizadoEm: serverTimestamp()
       };
 
-      if (idsExistentes.has(item.id)) {
-        return setDoc(referencia, dadosCatalogo, { merge: true });
-      }
-
       return setDoc(referencia, {
         ...dadosCatalogo,
         quantidade: item.quantidade,
         estoqueInicial: item.quantidade,
+        estoqueMinimo: 0,
         criadoEm: serverTimestamp(),
         inicializadoPor: currentUserData.uid
       });
@@ -1692,6 +2138,8 @@ async function garantirEstoqueInicialEpi() {
         confirmButtonColor: '#0F172A'
       });
     }
+  } finally {
+    preparandoEstoqueInicialEpi = false;
   }
 }
 
@@ -1702,6 +2150,7 @@ function iniciarModuloEpi() {
 
   const qEstoque = query(collection(db, 'estoque_epi'), orderBy('ordem', 'asc'));
   const cancelarEstoque = onSnapshot(qEstoque, (snapshot) => {
+    const idsExistentes = new Set(snapshot.docs.map((docSnap) => docSnap.id));
     const catalogoBase = new Map(ESTOQUE_EPI_INICIAL.map((item) => [item.id, item]));
     estoqueEpiCache = snapshot.docs.map((docSnap) => ({
       ...(catalogoBase.get(docSnap.id) || {}),
@@ -1710,6 +2159,7 @@ function iniciarModuloEpi() {
       quantidade: Math.max(0, Number(docSnap.data().quantidade) || 0)
     }));
     renderizarModuloEpi();
+    if (currentUserData?.role === 'admin') garantirEstoqueInicialEpi(idsExistentes);
   }, (error) => {
     console.error('Erro ao acompanhar estoque de EPIs:', error);
     if (epiCatalogGrid) epiCatalogGrid.innerHTML = '<p class="epi-empty-state">Não foi possível carregar os equipamentos.</p>';
@@ -1729,9 +2179,7 @@ function iniciarModuloEpi() {
   canceladoresOuvintesEpi.push(cancelarEstoque, cancelarMinhasSolicitacoes);
 
   if (currentUserData.role === 'admin') {
-    garantirEstoqueInicialEpi();
-
-    const qSolicitacoesAdmin = query(collection(db, 'solicitacoes_epi'), orderBy('criadoEm', 'desc'));
+    const qSolicitacoesAdmin = query(collection(db, 'solicitacoes_epi'), orderBy('criadoEm', 'desc'), limit(150));
     const cancelarSolicitacoesAdmin = onSnapshot(qSolicitacoesAdmin, (snapshot) => {
       solicitacoesEpiAdminCache = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
       renderizarSolicitacoesEpiAdmin();
@@ -1740,7 +2188,7 @@ function iniciarModuloEpi() {
       agendarProcessamentoExpiracoesEpi();
     }, (error) => console.error('Erro ao acompanhar solicitações de EPI:', error));
 
-    const qMovimentacoes = query(collection(db, 'movimentacoes_epi'), orderBy('criadoEm', 'desc'));
+    const qMovimentacoes = query(collection(db, 'movimentacoes_epi'), orderBy('criadoEm', 'desc'), limit(150));
     const cancelarMovimentacoes = onSnapshot(qMovimentacoes, (snapshot) => {
       movimentacoesEpiCache = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
       renderizarMovimentacoesEpi();
@@ -2090,6 +2538,15 @@ function renderizarMinhasSolicitacoesEpi() {
         ` : ''}
         ${solicitacao.motivoRecusa ? `<p class="epi-request-feedback"><strong>Motivo:</strong> ${escaparHtml(solicitacao.motivoRecusa)}</p>` : ''}
         ${solicitacao.status === 'pendente' ? `<button type="button" class="epi-cancel-request" onclick="cancelarSolicitacaoEpi('${solicitacao.id}')">Cancelar solicitação</button>` : ''}
+        ${solicitacao.status === 'retirado' ? `
+          <p class="epi-delivery-confirmation ${solicitacao.entregaConfirmada ? 'confirmed' : ''}">
+            ${solicitacao.entregaConfirmada ? 'Recebimento confirmado pelo colaborador.' : 'Confirme o recebimento dos itens entregues.'}
+          </p>
+          <div class="epi-request-receipt-actions">
+            ${!solicitacao.entregaConfirmada ? `<button type="button" class="epi-confirm-delivery-button" onclick="confirmarRecebimentoEpi('${solicitacao.id}')">Confirmar recebimento</button>` : ''}
+            <button type="button" class="epi-receipt-button" onclick="gerarComprovanteEpi('${solicitacao.id}')">Gerar comprovante</button>
+          </div>
+        ` : ''}
       </article>
     `;
   }).join('');
@@ -2210,7 +2667,10 @@ function sincronizarVariacoesMovimentoEpi() {
 function atualizarKpisEpiAdmin() {
   if (currentUserData?.role !== 'admin') return;
   const total = estoqueEpiCache.reduce((soma, item) => soma + item.quantidade, 0);
-  const estoqueBaixo = estoqueEpiCache.filter((item) => item.quantidade <= 2).length;
+  const estoqueBaixo = estoqueEpiCache.filter((item) => {
+    const minimo = Math.max(0, Number(item.estoqueMinimo) || 0);
+    return minimo > 0 && item.quantidade < minimo;
+  }).length;
   const pendentes = solicitacoesEpiAdminCache.filter((item) => item.status === 'pendente').length;
   if (epiTotalStock) epiTotalStock.textContent = total;
   if (epiLowStock) epiLowStock.textContent = estoqueBaixo;
@@ -2227,15 +2687,27 @@ function renderizarEstoqueEpiAdmin() {
 
   epiStockList.innerHTML = grupos.map((grupo, indice) => {
     const total = grupo.itens.reduce((soma, item) => soma + item.quantidade, 0);
-    const linhas = grupo.itens.map((item) => `
-      <div class="epi-stock-row">
+    const grupoBaixo = grupo.itens.some((item) => {
+      const minimo = Math.max(0, Number(item.estoqueMinimo) || 0);
+      return minimo > 0 && item.quantidade < minimo;
+    });
+    const linhas = grupo.itens.map((item) => {
+      const minimo = Math.max(0, Number(item.estoqueMinimo) || 0);
+      const abaixoMinimo = minimo > 0 && item.quantidade < minimo;
+      return `
+      <div class="epi-stock-row ${abaixoMinimo ? 'below-minimum' : ''}">
         <span>${item.variacao === 'Único' ? 'Sem variação' : escaparHtml(item.variacao)}</span>
-        <strong class="${item.quantidade <= 2 ? 'low' : ''}">${item.quantidade}</strong>
+        <strong class="${abaixoMinimo ? 'low' : ''}">${item.quantidade}</strong>
+        <label class="epi-minimum-field" title="Quantidade mínima desejada">
+          <span>Mín.</span>
+          <input type="number" min="0" max="9999" value="${minimo}" onchange="salvarEstoqueMinimoEpi('${item.id}', this.value)" aria-label="Estoque mínimo de ${escaparHtml(item.nome)} ${escaparHtml(item.variacao || '')}">
+        </label>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     return `
-      <details class="epi-stock-group" ${indice < 2 ? 'open' : ''}>
+      <details class="epi-stock-group ${grupoBaixo ? 'below-minimum' : ''}" ${indice < 2 ? 'open' : ''}>
         <summary>
           <span class="epi-stock-summary-name">${obterIconeEpi(grupo.icone)}<strong>${escaparHtml(grupo.nome)}</strong></span>
           <span>${total} un.</span>
@@ -2244,6 +2716,78 @@ function renderizarEstoqueEpiAdmin() {
       </details>
     `;
   }).join('');
+
+  renderizarListaReposicaoEpi();
+}
+
+function obterItensReposicaoEpi() {
+  return estoqueEpiCache
+    .filter((item) => {
+      const minimo = Math.max(0, Number(item.estoqueMinimo) || 0);
+      return minimo > 0 && item.quantidade < minimo;
+    })
+    .map((item) => ({
+      ...item,
+      estoqueMinimo: Math.max(0, Number(item.estoqueMinimo) || 0),
+      quantidadeComprar: Math.max(0, (Number(item.estoqueMinimo) || 0) - item.quantidade)
+    }))
+    .sort((a, b) => (Number(a.ordem) || 999) - (Number(b.ordem) || 999));
+}
+
+function renderizarListaReposicaoEpi() {
+  if (!epiRestockList) return;
+  const itens = obterItensReposicaoEpi();
+  if (itens.length === 0) {
+    epiRestockList.innerHTML = '<p class="epi-empty-state compact">Nenhum item abaixo do estoque mínimo.</p>';
+    if (epiExportRestock) epiExportRestock.disabled = true;
+    return;
+  }
+
+  if (epiExportRestock) epiExportRestock.disabled = false;
+  epiRestockList.innerHTML = itens.map((item) => `
+    <div class="epi-restock-row">
+      <span><strong>${escaparHtml(item.nome)}</strong>${item.variacao !== 'Único' ? `<small>Tamanho ${escaparHtml(item.variacao)}</small>` : ''}</span>
+      <span class="epi-restock-numbers"><small>${item.quantidade} atual / ${item.estoqueMinimo} mínimo</small><strong>Comprar ${item.quantidadeComprar}</strong></span>
+    </div>
+  `).join('');
+}
+
+window.salvarEstoqueMinimoEpi = async (itemId, valor) => {
+  if (currentUserData?.role !== 'admin') return;
+  const estoqueMinimo = Number(valor);
+  if (!Number.isInteger(estoqueMinimo) || estoqueMinimo < 0) {
+    Toast.fire({ icon: 'warning', title: 'Informe um estoque mínimo válido.' });
+    renderizarEstoqueEpiAdmin();
+    return;
+  }
+
+  try {
+    const item = estoqueEpiCache.find((registro) => registro.id === itemId);
+    await updateDoc(doc(db, 'estoque_epi', itemId), {
+      estoqueMinimo,
+      atualizadoEm: serverTimestamp(),
+      atualizadoPorUid: currentUserData.uid,
+      atualizadoPorNome: currentUserData.nome || currentUserData.email
+    });
+    await registrarAuditoria('estoque_minimo_alterado', 'estoque_epi', {
+      itemId,
+      item: item?.nome || itemId,
+      variacao: item?.variacao || '',
+      estoqueMinimo
+    });
+    Toast.fire({ icon: 'success', title: 'Estoque mínimo atualizado.' });
+  } catch (error) {
+    Swal.fire({ icon: 'error', title: 'Não foi possível salvar', text: error.message, confirmButtonColor: '#0F172A' });
+  }
+};
+
+function exportarListaReposicaoEpi() {
+  const itens = obterItensReposicaoEpi();
+  if (itens.length === 0) return;
+  baixarCsv(`reposicao-epi-${obterDataLocalIso()}.csv`, [
+    ['Equipamento', 'Tamanho', 'Estoque atual', 'Estoque mínimo', 'Quantidade sugerida'],
+    ...itens.map((item) => [item.nome, item.variacao === 'Único' ? '' : item.variacao, item.quantidade, item.estoqueMinimo, item.quantidadeComprar])
+  ]);
 }
 
 async function registrarMovimentacaoEpi(event) {
@@ -2299,6 +2843,7 @@ async function registrarMovimentacaoEpi(event) {
     epiMovementForm.reset();
     epiMovementQuantity.value = 1;
     sincronizarVariacoesMovimentoEpi();
+    await registrarAuditoria('movimentacao_epi', 'estoque_epi', { itemId, tipo, quantidade, motivo });
     Toast.fire({ icon: 'success', title: `${tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada com sucesso.` });
   } catch (error) {
     Swal.fire({ icon: 'error', title: 'Movimentação não realizada', text: error.message, confirmButtonColor: '#0F172A' });
@@ -2350,6 +2895,14 @@ function renderizarSolicitacoesEpiAdmin() {
         ${solicitacao.status === 'aprovado' && prazoRetirada && prazoRetirada.getTime() > Date.now() ? `
           <div class="epi-admin-request-actions single">
             <button type="button" class="epi-withdraw-button" onclick="confirmarRetiradaEpi('${solicitacao.id}')">Retirado</button>
+          </div>
+        ` : ''}
+        ${solicitacao.status === 'retirado' ? `
+          <p class="epi-delivery-confirmation ${solicitacao.entregaConfirmada ? 'confirmed' : ''}">
+            ${solicitacao.entregaConfirmada ? 'Recebimento confirmado pelo colaborador.' : 'Aguardando confirmação do colaborador.'}
+          </p>
+          <div class="epi-admin-request-actions single">
+            <button type="button" class="epi-receipt-button" onclick="gerarComprovanteEpi('${solicitacao.id}')">Gerar comprovante</button>
           </div>
         ` : ''}
       </article>
@@ -2437,6 +2990,12 @@ window.atenderSolicitacaoEpi = async (solicitacaoId) => {
       });
     });
 
+    await registrarAuditoria('epi_aprovado', 'solicitacoes_epi', {
+      solicitacaoId,
+      colaboradorUid: solicitacao.colaboradorUid,
+      colaboradorNome: solicitacao.colaboradorNome,
+      totalItens: solicitacao.totalItens || 0
+    });
     Toast.fire({ icon: 'success', title: `Solicitação aprovada. Prazo de retirada: ${PRAZO_RETIRADA_EPI_DIAS} dias.` });
   } catch (error) {
     Swal.fire({ icon: 'error', title: 'Não foi possível aprovar', text: error.message, confirmButtonColor: '#0F172A' });
@@ -2462,6 +3021,7 @@ window.confirmarRetiradaEpi = async (solicitacaoId) => {
 
   try {
     const proximaSolicitacao = adicionarDiasEpi(new Date(), INTERVALO_SOLICITACAO_EPI_DIAS);
+    const comprovanteNumero = `EPI-${obterDataLocalIso().replaceAll('-', '')}-${solicitacaoId.slice(0, 6).toUpperCase()}`;
     await runTransaction(db, async (transacao) => {
       const referencia = doc(db, 'solicitacoes_epi', solicitacaoId);
       const snapshot = await transacao.get(referencia);
@@ -2479,6 +3039,9 @@ window.confirmarRetiradaEpi = async (solicitacaoId) => {
         retiradoEm: serverTimestamp(),
         retiradaConfirmadaPorUid: currentUserData.uid,
         retiradaConfirmadaPorNome: currentUserData.nome || currentUserData.email,
+        comprovanteNumero,
+        itensEntregues: dados.itens || [],
+        entregaConfirmada: false,
         atualizadoEm: serverTimestamp()
       });
 
@@ -2488,10 +3051,92 @@ window.confirmarRetiradaEpi = async (solicitacaoId) => {
       }, { merge: true });
     });
 
+    await registrarAuditoria('epi_retirado', 'solicitacoes_epi', {
+      solicitacaoId,
+      comprovanteNumero,
+      colaboradorUid: solicitacao.colaboradorUid,
+      colaboradorNome: solicitacao.colaboradorNome,
+      totalItens: solicitacao.totalItens || 0
+    });
     Toast.fire({ icon: 'success', title: 'Retirada confirmada. Novo pedido liberado em 60 dias.' });
   } catch (error) {
     Swal.fire({ icon: 'error', title: 'Não foi possível confirmar', text: error.message, confirmButtonColor: '#0F172A' });
   }
+};
+
+window.confirmarRecebimentoEpi = async (solicitacaoId) => {
+  const solicitacao = minhasSolicitacoesEpiCache.find((item) => item.id === solicitacaoId);
+  if (!solicitacao || solicitacao.colaboradorUid !== currentUserData?.uid) return;
+
+  const confirmacao = await Swal.fire({
+    icon: 'question',
+    title: 'Confirmar recebimento?',
+    text: 'Confirme somente se você recebeu todos os equipamentos e tamanhos descritos no pedido.',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, recebi os itens',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#15803D',
+    cancelButtonColor: '#64748B'
+  });
+  if (!confirmacao.isConfirmed) return;
+
+  try {
+    await runTransaction(db, async (transacao) => {
+      const referencia = doc(db, 'solicitacoes_epi', solicitacaoId);
+      const snapshot = await transacao.get(referencia);
+      if (!snapshot.exists()) throw new Error('Solicitação não encontrada.');
+      const dados = snapshot.data();
+      if (dados.colaboradorUid !== currentUserData.uid) throw new Error('Você não pode confirmar este recebimento.');
+      if (dados.status !== 'retirado') throw new Error('Esta entrega ainda não foi registrada como retirada.');
+      if (dados.entregaConfirmada) return;
+
+      transacao.update(referencia, {
+        entregaConfirmada: true,
+        entregaConfirmadaEm: serverTimestamp(),
+        entregaConfirmadaPorUid: currentUserData.uid,
+        entregaConfirmadaPorNome: currentUserData.nome || currentUserData.email,
+        atualizadoEm: serverTimestamp()
+      });
+    });
+
+    Toast.fire({ icon: 'success', title: 'Recebimento confirmado.' });
+  } catch (error) {
+    Swal.fire({ icon: 'error', title: 'Não foi possível confirmar', text: error.message, confirmButtonColor: '#0F172A' });
+  }
+};
+
+window.gerarComprovanteEpi = (solicitacaoId) => {
+  const solicitacao = [...minhasSolicitacoesEpiCache, ...solicitacoesEpiAdminCache]
+    .find((item) => item.id === solicitacaoId);
+  if (!solicitacao || solicitacao.status !== 'retirado') return;
+
+  const numero = solicitacao.comprovanteNumero || `EPI-${solicitacaoId.slice(0, 8).toUpperCase()}`;
+  const itens = solicitacao.itensEntregues || solicitacao.itens || [];
+  const itensHtml = itens.map((item) => `
+    <tr>
+      <td>${escaparHtml(item.nome)}</td>
+      <td>${item.variacao && item.variacao !== 'Único' ? escaparHtml(item.variacao) : '—'}</td>
+      <td>${Number(item.quantidade) || 1}</td>
+    </tr>
+  `).join('');
+  const confirmacao = solicitacao.entregaConfirmada
+    ? `Confirmado pelo colaborador em ${formatarDataHoraEpi(solicitacao.entregaConfirmadaEm)}`
+    : 'Aguardando confirmação do colaborador';
+
+  abrirDocumentoImpressao(`Comprovante ${numero}`, `
+    <header class="document-header">
+      <div><span>T&amp;T Transportes</span><h1>Comprovante de entrega de EPI</h1></div>
+      <strong>${escaparHtml(numero)}</strong>
+    </header>
+    <section class="document-info">
+      <p><b>Colaborador:</b> ${escaparHtml(solicitacao.colaboradorNome || 'Não informado')}</p>
+      <p><b>Data da retirada:</b> ${formatarDataHoraEpi(solicitacao.retiradoEm)}</p>
+      <p><b>Responsável pela entrega:</b> ${escaparHtml(solicitacao.retiradaConfirmadaPorNome || 'Administrador')}</p>
+    </section>
+    <table><thead><tr><th>Equipamento</th><th>Tamanho</th><th>Quantidade</th></tr></thead><tbody>${itensHtml}</tbody></table>
+    <div class="document-confirmation"><b>Confirmação:</b> ${escaparHtml(confirmacao)}</div>
+    <div class="document-signatures"><span>Assinatura do colaborador</span><span>Assinatura do responsável</span></div>
+  `);
 };
 
 async function expirarSolicitacaoEpi(solicitacaoId) {
@@ -2631,6 +3276,13 @@ window.recusarSolicitacaoEpi = async (solicitacaoId) => {
         atualizadoEm: serverTimestamp()
       });
     });
+    const solicitacao = solicitacoesEpiAdminCache.find((item) => item.id === solicitacaoId);
+    await registrarAuditoria('epi_recusado', 'solicitacoes_epi', {
+      solicitacaoId,
+      colaboradorUid: solicitacao?.colaboradorUid,
+      colaboradorNome: solicitacao?.colaboradorNome,
+      motivo: resposta.value.trim()
+    });
     Toast.fire({ icon: 'success', title: 'Solicitação recusada.' });
   } catch (error) {
     Swal.fire({ icon: 'error', title: 'Não foi possível recusar', text: error.message, confirmButtonColor: '#0F172A' });
@@ -2695,7 +3347,13 @@ function eDiaUtilRefeicao(dataIso) {
   const [ano, mes, dia] = String(dataIso || '').split('-').map(Number);
   if (!ano || !mes || !dia) return false;
 
-  const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  const dataValida = data.getUTCFullYear() === ano
+    && data.getUTCMonth() === mes - 1
+    && data.getUTCDate() === dia;
+  if (!dataValida) return false;
+
+  const diaDaSemana = data.getUTCDay();
   return diaDaSemana !== 0 && diaDaSemana !== 6;
 }
 
@@ -2747,6 +3405,7 @@ function usuarioPrecisaLembreteAlmoco(dataReserva) {
   const chaveAlmoco = criarChaveReserva(dataReserva, 'almoco');
   return !datasReservadasUsuario.has(chaveAlmoco)
     && !datasDesconsideradasUsuario.has(chaveAlmoco)
+    && !usuarioEstaAfastadoNaData(currentUserData.uid, dataReserva)
     && !usuarioTemRefeicaoFixa(currentUserData, 'almoco', dataReserva);
 }
 
@@ -2825,10 +3484,17 @@ function listarDatasDoMes(mesReferencia) {
   if (!/^\d{4}-\d{2}$/.test(mesReferencia || '')) return [];
 
   const [ano, mes] = mesReferencia.split('-').map(Number);
-  const totalDias = new Date(ano, mes, 0).getDate();
+  if (!Number.isInteger(ano) || !Number.isInteger(mes) || mes < 1 || mes > 12) return [];
+
+  const totalDias = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
   return Array.from({ length: totalDias }, (_, indice) =>
     `${ano}-${String(mes).padStart(2, '0')}-${String(indice + 1).padStart(2, '0')}`
   ).filter(eDiaUtilRefeicao);
+}
+
+function obterPrimeiroDiaDoMesIso(dataIso) {
+  const valor = String(dataIso || '');
+  return /^\d{4}-\d{2}-\d{2}$/.test(valor) ? `${valor.slice(0, 7)}-01` : null;
 }
 
 function formatarDataRefeicao(dataIso, incluirSemana = false) {
@@ -2852,21 +3518,48 @@ function escaparHtml(valor = '') {
     .replaceAll("'", '&#039;');
 }
 
-function usuarioTemRefeicaoFixa(usuario, tipoRefeicao, dataReserva = null) {
+function obterAfastamentosDisponiveis() {
+  const registros = currentUserData?.role === 'admin'
+    ? [...afastamentosAdminCache, ...afastamentosUsuarioCache]
+    : afastamentosUsuarioCache;
+  return [...new Map(registros.map((item) => [item.id, item])).values()];
+}
+
+function usuarioEstaAfastadoNaData(colaboradorUid, dataIso, afastamentos = null) {
+  if (!colaboradorUid || !dataIso) return false;
+  const registros = Array.isArray(afastamentos) ? afastamentos : obterAfastamentosDisponiveis();
+  return registros.some((afastamento) =>
+    afastamento.colaboradorUid === colaboradorUid &&
+    afastamento.dataInicio &&
+    afastamento.dataFim &&
+    dataIso >= afastamento.dataInicio &&
+    dataIso <= afastamento.dataFim
+  );
+}
+
+function obterRotuloAfastamento(tipo) {
+  return ({ ferias: 'Férias', folga: 'Folga', afastamento: 'Afastamento' })[tipo] || 'Afastamento';
+}
+
+function usuarioTemRefeicaoFixa(usuario, tipoRefeicao, dataReserva = null, afastamentos = null) {
   const tipo = normalizarTipoRefeicao(tipoRefeicao);
   const ativoAtualmente = Boolean(usuario?.refeicoesFixas?.[tipo]);
   if (!dataReserva) return ativoAtualmente;
+  if (usuarioEstaAfastadoNaData(usuario?.uid, dataReserva, afastamentos)) return false;
 
   const periodos = usuario?.periodosRefeicoesFixas?.[tipo];
   if (!Array.isArray(periodos) || periodos.length === 0) {
     return ativoAtualmente;
   }
 
-  return periodos.some((periodo) =>
-    periodo?.inicio &&
-    dataReserva >= periodo.inicio &&
-    (!periodo.fim || dataReserva <= periodo.fim)
-  );
+  return periodos.some((periodo) => {
+    // Uma refeição permanente vale para todos os dias úteis do mês em que
+    // foi ativada, mesmo que o cadastro tenha sido feito no meio do mês.
+    const inicioEfetivo = obterPrimeiroDiaDoMesIso(periodo?.inicio);
+    return inicioEfetivo
+      && dataReserva >= inicioEfetivo
+      && (!periodo.fim || dataReserva <= periodo.fim);
+  });
 }
 
 function criarIdExcecaoRefeicao(colaboradorUid, dataReserva, tipoRefeicao) {
@@ -2882,7 +3575,9 @@ function atualizarKpisMesUsuario() {
   const chaves = new Set(
     reservasUsuarioCache
       .filter((reserva) =>
-        reserva.data?.startsWith(mesAtual) && eDiaUtilRefeicao(reserva.data)
+        reserva.data?.startsWith(mesAtual) &&
+        eDiaUtilRefeicao(reserva.data) &&
+        !usuarioEstaAfastadoNaData(currentUserData.uid, reserva.data)
       )
       .map((reserva) => criarChaveReserva(reserva.data, reserva.tipo))
   );
@@ -2899,6 +3594,10 @@ function atualizarKpisMesUsuario() {
 
   elTotal.textContent = chaves.size;
   elCusto.textContent = `R$ ${(chaves.size * PRECO_REFEICAO).toFixed(2).replace('.', ',')}`;
+  const elCalculo = document.getElementById("calculo-custo-mes");
+  if (elCalculo) {
+    elCalculo.textContent = `${chaves.size} × R$ ${PRECO_REFEICAO.toFixed(2).replace('.', ',')} por refeição`;
+  }
 }
 
 function ouvirRefeicoesDoMes() {
@@ -2933,6 +3632,15 @@ function criarBotaoReservaHtml(dataReserva, tipoRefeicao) {
     `;
   }
 
+  if (usuarioEstaAfastadoNaData(currentUserData?.uid, dataReserva)) {
+    return `
+      <button type="button" class="btn btn-refeicao-indisponivel btn-reserva-card" disabled aria-disabled="true">
+        <span>Refeição suspensa</span>
+        <small>Férias, folga ou afastamento registrado</small>
+      </button>
+    `;
+  }
+
   if (datasDesconsideradasUsuario.has(chaveReserva)) {
     return `
       <button type="button" class="btn btn-refeicao-desconsiderada btn-reserva-card" disabled aria-disabled="true">
@@ -2945,7 +3653,7 @@ function criarBotaoReservaHtml(dataReserva, tipoRefeicao) {
   if (datasReservadasUsuario.has(chaveReserva) || refeicaoFixa) {
     return `
       <button type="button" class="btn btn-reservado btn-reserva-card" disabled aria-disabled="true">
-        <span>✓ ${refeicaoLabel} reservad${eJanta ? 'a' : 'o'}</span>
+        <span class="inline-icon-label">${obterIconeInterface('check')}<span>${refeicaoLabel} reservad${eJanta ? 'a' : 'o'}</span></span>
         <small>${refeicaoFixa ? 'Reserva permanente' : 'Reserva confirmada'} • R$ ${PRECO_REFEICAO.toFixed(2).replace('.', ',')}</small>
       </button>
     `;
@@ -3037,7 +3745,18 @@ function ouvirReservasDoUsuario() {
     console.error("Erro ao acompanhar configuração de refeições do usuário:", error);
   });
 
-  canceladoresOuvintesUsuario.push(cancelarReservas, cancelarExcecoes, cancelarPerfil);
+  const qAfastamentos = query(
+    collection(db, 'afastamentos'),
+    where('colaboradorUid', '==', currentUserData.uid)
+  );
+  const cancelarAfastamentos = onSnapshot(qAfastamentos, (snapshot) => {
+    afastamentosUsuarioCache = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+    atualizarInterfaceReservasUsuario();
+    renderizarRefeicoesHoje();
+    renderizarPainelMensalRefeicoes();
+  }, (error) => console.error('Erro ao acompanhar afastamentos do usuário:', error));
+
+  canceladoresOuvintesUsuario.push(cancelarReservas, cancelarExcecoes, cancelarPerfil, cancelarAfastamentos);
 }
 
 window.reservarRefeicao = async (dataOuTipo = 'almoco', tipoRefeicao = 'almoco') => {
@@ -3064,6 +3783,15 @@ window.reservarRefeicao = async (dataOuTipo = 'almoco', tipoRefeicao = 'almoco')
     });
   }
 
+  if (usuarioEstaAfastadoNaData(currentUserData.uid, dataReserva)) {
+    return Swal.fire({
+      icon: 'info',
+      title: 'Refeições suspensas',
+      text: 'Existe um período de férias, folga ou afastamento registrado para esta data.',
+      confirmButtonColor: '#0284C7'
+    });
+  }
+
   const agora = new Date();
   const [ano, mes, dia] = dataReserva.split('-').map(Number);
   const dataDesejada = new Date(ano, mes - 1, dia);
@@ -3082,7 +3810,7 @@ window.reservarRefeicao = async (dataOuTipo = 'almoco', tipoRefeicao = 'almoco')
     const horaAtual = agora.getHours();
     const minutoAtual = agora.getMinutes();
 
-    if (horaAtual > horaLimite || (horaAtual === horaLimite && minutoAtual > minutoLimite)) {
+    if (horaAtual > horaLimite || (horaAtual === horaLimite && minutoAtual >= minutoLimite)) {
       return Swal.fire({
         icon: 'warning',
         title: 'Horário Limite Excedido',
@@ -3198,6 +3926,7 @@ window.excluirCardapio = async (dataStr) => {
 
   try {
     await deleteDoc(doc(db, "cardapio", dataStr));
+    await registrarAuditoria('cardapio_excluido', 'cardapio', { data: dataStr });
     Swal.fire({
       icon: 'success',
       title: 'Cardápio Excluído',
@@ -3225,7 +3954,7 @@ function criarChaveAdminRefeicao(colaboradorUid, dataReserva, tipoRefeicao) {
   return `${colaboradorUid}|${dataReserva}|${normalizarTipoRefeicao(tipoRefeicao)}`;
 }
 
-function combinarRefeicoes(datas, reservas, excecoes) {
+function combinarRefeicoes(datas, reservas, excecoes, usuarios = usuariosRefeicoesCache, afastamentos = null) {
   const datasUteis = datas.filter(eDiaUtilRefeicao);
   const datasPermitidas = new Set(datasUteis);
   const excecoesPorChave = new Map(
@@ -3235,12 +3964,11 @@ function combinarRefeicoes(datas, reservas, excecoes) {
     ])
   );
   const refeicoesPorChave = new Map();
-  const usuariosPorUid = new Map(
-    usuariosRefeicoesCache.map((usuario) => [usuario.uid, usuario])
-  );
+  const usuariosPorUid = new Map(usuarios.map((usuario) => [usuario.uid, usuario]));
 
   reservas.forEach((reserva) => {
     if (!reserva.colaboradorUid || !datasPermitidas.has(reserva.data)) return;
+    if (usuarioEstaAfastadoNaData(reserva.colaboradorUid, reserva.data, afastamentos)) return;
 
     const tipo = normalizarTipoRefeicao(reserva.tipo);
     const chave = criarChaveAdminRefeicao(reserva.colaboradorUid, reserva.data, tipo);
@@ -3260,16 +3988,18 @@ function combinarRefeicoes(datas, reservas, excecoes) {
       colaboradorNome: usuario?.nome || reserva.colaboradorNome || usuario?.email || 'Colaborador',
       data: reserva.data,
       tipo,
-      recorrente: usuarioTemRefeicaoFixa(usuario, tipo, reserva.data),
+      recorrente: usuarioTemRefeicaoFixa(usuario, tipo, reserva.data, afastamentos),
       reservaIds: [reserva.id],
       valor: Number(reserva.valor) || PRECO_REFEICAO
     });
   });
 
-  obterColaboradoresRefeicoes().forEach((usuario) => {
+  [...usuarios].sort((a, b) =>
+    (a.nome || a.email || '').localeCompare(b.nome || b.email || '', 'pt-BR')
+  ).forEach((usuario) => {
     ['almoco', 'janta'].forEach((tipo) => {
       datasUteis.forEach((dataReserva) => {
-        if (!usuarioTemRefeicaoFixa(usuario, tipo, dataReserva)) return;
+        if (!usuarioTemRefeicaoFixa(usuario, tipo, dataReserva, afastamentos)) return;
 
         const chave = criarChaveAdminRefeicao(usuario.uid, dataReserva, tipo);
         if (excecoesPorChave.has(chave)) return;
@@ -3301,6 +4031,8 @@ function preencherSelectsColaboradores() {
   const colaboradores = obterColaboradoresRefeicoes();
   const valorFixoAtual = fixedMealUser?.value || '';
   const valorFiltroAtual = monthlyMealUser?.value || '';
+  const valorAfastamentoAtual = absenceUser?.value || '';
+  const valorRelatorioAtual = reportUser?.value || '';
 
   if (fixedMealUser) {
     fixedMealUser.innerHTML = '<option value="">Selecione um colaborador</option>';
@@ -3325,6 +4057,32 @@ function preencherSelectsColaboradores() {
     });
     monthlyMealUser.value = colaboradores.some((usuario) => usuario.uid === valorFiltroAtual)
       ? valorFiltroAtual
+      : '';
+  }
+
+  if (absenceUser) {
+    absenceUser.innerHTML = '<option value="">Selecione um colaborador</option>';
+    colaboradores.forEach((usuario) => {
+      const option = document.createElement('option');
+      option.value = usuario.uid;
+      option.textContent = usuario.nome || usuario.email || 'Colaborador';
+      absenceUser.appendChild(option);
+    });
+    absenceUser.value = colaboradores.some((usuario) => usuario.uid === valorAfastamentoAtual)
+      ? valorAfastamentoAtual
+      : '';
+  }
+
+  if (reportUser) {
+    reportUser.innerHTML = '<option value="">Todos os colaboradores</option>';
+    colaboradores.forEach((usuario) => {
+      const option = document.createElement('option');
+      option.value = usuario.uid;
+      option.textContent = usuario.nome || usuario.email || 'Colaborador';
+      reportUser.appendChild(option);
+    });
+    reportUser.value = colaboradores.some((usuario) => usuario.uid === valorRelatorioAtual)
+      ? valorRelatorioAtual
       : '';
   }
 
@@ -3634,6 +4392,12 @@ async function desconsiderarRefeicao(item) {
       )
     );
 
+    await registrarAuditoria('refeicao_desconsiderada', 'refeicoes', {
+      colaboradorUid: item.colaboradorUid,
+      colaboradorNome: item.colaboradorNome,
+      data: item.data,
+      tipo: item.tipo
+    });
     Toast.fire({ icon: 'success', title: 'Refeição desconsiderada.' });
   } catch (error) {
     console.error("Erro ao desconsiderar refeição:", error);
@@ -3694,6 +4458,12 @@ async function restaurarRefeicaoDesconsiderada(item) {
       criarIdExcecaoRefeicao(item.colaboradorUid, item.data, item.tipo)
     ));
 
+    await registrarAuditoria('refeicao_reconsiderada', 'refeicoes', {
+      colaboradorUid: item.colaboradorUid,
+      colaboradorNome: item.colaboradorNome,
+      data: item.data,
+      tipo: item.tipo
+    });
     Toast.fire({ icon: 'success', title: 'Refeição reconsiderada.' });
   } catch (error) {
     console.error("Erro ao reconsiderar refeição:", error);
@@ -3724,6 +4494,47 @@ function ouvirUsuariosRefeicoes() {
     }
   });
 
+  canceladoresOuvintesAdmin.push(cancelar);
+}
+
+function renderizarListaAfastamentos() {
+  if (!absenceList || currentUserData?.role !== 'admin') return;
+  const registros = [...afastamentosAdminCache].sort((a, b) =>
+    String(b.dataInicio || '').localeCompare(String(a.dataInicio || ''))
+  );
+
+  if (registros.length === 0) {
+    absenceList.innerHTML = '<p class="meal-admin-empty">Nenhum período registrado.</p>';
+    return;
+  }
+
+  const hoje = obterDataLocalIso();
+  absenceList.innerHTML = registros.map((item) => {
+    const emAndamento = item.dataInicio <= hoje && item.dataFim >= hoje;
+    const futuro = item.dataInicio > hoje;
+    const status = emAndamento ? 'Em andamento' : (futuro ? 'Programado' : 'Encerrado');
+    return `
+      <article class="absence-row ${emAndamento ? 'active' : ''}">
+        <div class="absence-row-main">
+          <span class="absence-type">${escaparHtml(obterRotuloAfastamento(item.tipo))}</span>
+          <strong>${escaparHtml(item.colaboradorNome || 'Colaborador')}</strong>
+          <small>${formatarDataRefeicao(item.dataInicio)} até ${formatarDataRefeicao(item.dataFim)} · ${status}</small>
+          ${item.motivo ? `<p>${escaparHtml(item.motivo)}</p>` : ''}
+        </div>
+        <button type="button" class="meal-row-action meal-row-action-remove" onclick="excluirAfastamento('${item.id}')">Excluir</button>
+      </article>
+    `;
+  }).join('');
+}
+
+function ouvirAfastamentosAdmin() {
+  const cancelar = onSnapshot(collection(db, 'afastamentos'), (snapshot) => {
+    afastamentosAdminCache = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+    renderizarListaAfastamentos();
+    renderizarRefeicoesHoje();
+    renderizarPainelMensalRefeicoes();
+    atualizarKpisMesUsuario();
+  }, (error) => console.error('Erro ao acompanhar afastamentos:', error));
   canceladoresOuvintesAdmin.push(cancelar);
 }
 
@@ -3804,9 +4615,88 @@ function iniciarGestaoAdminRefeicoes() {
   }
 
   ouvirUsuariosRefeicoes();
+  ouvirAfastamentosAdmin();
   ouvirReservasRefeicoes();
   carregarPainelMensalRefeicoes(monthlyMealMonth?.value || obterMesAtualIso());
+  iniciarFechamentoAutomaticoRefeicoes();
 }
+
+if (absenceForm) {
+  absenceForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (currentUserData?.role !== 'admin' || !absenceUser.value) return;
+    if (!absenceStart.value || !absenceEnd.value || absenceEnd.value < absenceStart.value) {
+      Swal.fire({ icon: 'warning', title: 'Período inválido', text: 'A data final deve ser igual ou posterior à data inicial.', confirmButtonColor: '#0284C7' });
+      return;
+    }
+
+    const usuario = usuariosRefeicoesCache.find((item) => item.uid === absenceUser.value);
+    const botao = absenceForm.querySelector('button[type="submit"]');
+    botao.disabled = true;
+    atualizarConteudoBotao(botao, 'Registrando...', 'calendar');
+
+    try {
+      const referencia = await addDoc(collection(db, 'afastamentos'), {
+        colaboradorUid: absenceUser.value,
+        colaboradorNome: usuario?.nome || usuario?.email || 'Colaborador',
+        tipo: absenceType.value,
+        dataInicio: absenceStart.value,
+        dataFim: absenceEnd.value,
+        motivo: absenceReason.value.trim(),
+        criadoPorUid: currentUserData.uid,
+        criadoPorNome: currentUserData.nome || currentUserData.email,
+        criadoEm: serverTimestamp(),
+        atualizadoEm: serverTimestamp()
+      });
+      await registrarAuditoria('afastamento_criado', 'refeicoes', {
+        afastamentoId: referencia.id,
+        colaboradorUid: absenceUser.value,
+        colaboradorNome: usuario?.nome || usuario?.email || '',
+        tipo: absenceType.value,
+        dataInicio: absenceStart.value,
+        dataFim: absenceEnd.value
+      });
+      absenceForm.reset();
+      Toast.fire({ icon: 'success', title: 'Período registrado e refeições suspensas.' });
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Não foi possível registrar', text: error.message, confirmButtonColor: '#0284C7' });
+    } finally {
+      botao.disabled = false;
+      atualizarConteudoBotao(botao, 'Registrar período', 'calendar');
+    }
+  });
+}
+
+window.excluirAfastamento = async (afastamentoId) => {
+  if (currentUserData?.role !== 'admin') return;
+  const afastamento = afastamentosAdminCache.find((item) => item.id === afastamentoId);
+  if (!afastamento) return;
+  const confirmacao = await Swal.fire({
+    icon: 'warning',
+    title: 'Excluir período?',
+    text: `As refeições permanentes de ${afastamento.colaboradorNome || 'este colaborador'} voltarão a ser contabilizadas nas datas correspondentes.`,
+    showCancelButton: true,
+    confirmButtonText: 'Sim, excluir',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#B91C1C',
+    cancelButtonColor: '#64748B'
+  });
+  if (!confirmacao.isConfirmed) return;
+
+  try {
+    await deleteDoc(doc(db, 'afastamentos', afastamentoId));
+    await registrarAuditoria('afastamento_excluido', 'refeicoes', {
+      afastamentoId,
+      colaboradorUid: afastamento.colaboradorUid,
+      colaboradorNome: afastamento.colaboradorNome,
+      dataInicio: afastamento.dataInicio,
+      dataFim: afastamento.dataFim
+    });
+    Toast.fire({ icon: 'success', title: 'Período excluído.' });
+  } catch (error) {
+    Swal.fire({ icon: 'error', title: 'Não foi possível excluir', text: error.message, confirmButtonColor: '#0284C7' });
+  }
+};
 
 function obterDataAnteriorIso(dataIso) {
   const [ano, mes, dia] = dataIso.split('-').map(Number);
@@ -3817,6 +4707,7 @@ function atualizarPeriodosRefeicaoFixa(usuario, tipoRefeicao, novoEstado) {
   const tipo = normalizarTipoRefeicao(tipoRefeicao);
   const estadoAtual = usuarioTemRefeicaoFixa(usuario, tipo);
   const hoje = obterDataLocalIso();
+  const primeiroDiaDoMes = obterPrimeiroDiaDoMesIso(hoje);
   const ontem = obterDataAnteriorIso(hoje);
   const periodosAtuais = Array.isArray(usuario?.periodosRefeicoesFixas?.[tipo])
     ? usuario.periodosRefeicoesFixas[tipo].map((periodo) => ({ ...periodo }))
@@ -3825,7 +4716,7 @@ function atualizarPeriodosRefeicaoFixa(usuario, tipoRefeicao, novoEstado) {
   if (estadoAtual === novoEstado) return periodosAtuais;
 
   if (novoEstado) {
-    return [...periodosAtuais, { inicio: hoje, fim: null }];
+    return [...periodosAtuais, { inicio: primeiroDiaDoMes, fim: null }];
   }
 
   if (periodosAtuais.length === 0) {
@@ -3861,7 +4752,7 @@ if (fixedMealForm) {
 
     const submitButton = fixedMealForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
-    submitButton.textContent = 'Salvando...';
+    atualizarConteudoBotao(submitButton, 'Salvando...', 'check');
 
     try {
       const usuarioSelecionado = usuariosRefeicoesCache.find((usuario) =>
@@ -3891,6 +4782,12 @@ if (fixedMealForm) {
         refeicoesFixasAtualizadasPor: currentUserData.uid
       }, { merge: true });
 
+      await registrarAuditoria('refeicao_fixa_alterada', 'refeicoes', {
+        colaboradorUid: fixedMealUser.value,
+        colaboradorNome: usuarioSelecionado?.nome || usuarioSelecionado?.email || '',
+        almoco: fixedMealLunch.checked,
+        janta: fixedMealDinner.checked
+      });
       Toast.fire({ icon: 'success', title: 'Refeições permanentes atualizadas.' });
     } catch (error) {
       console.error("Erro ao salvar refeições permanentes:", error);
@@ -3902,10 +4799,256 @@ if (fixedMealForm) {
       });
     } finally {
       submitButton.disabled = false;
-      submitButton.textContent = 'Salvar configuração';
+      atualizarConteudoBotao(submitButton, 'Salvar configuração', 'check');
     }
   });
 }
+
+// =============================================================
+// FECHAMENTO DIÁRIO DE ALMOÇO E JANTA
+// =============================================================
+function criarIdFechamentoRefeicao(dataIso, tipoRefeicao) {
+  return `${dataIso}_${normalizarTipoRefeicao(tipoRefeicao)}`;
+}
+
+function obterLimiteFechamentoRefeicao(dataIso, tipoRefeicao) {
+  const [ano, mes, dia] = String(dataIso || '').split('-').map(Number);
+  const tipo = normalizarTipoRefeicao(tipoRefeicao);
+  return new Date(ano, mes - 1, dia, tipo === 'janta' ? 14 : 8, tipo === 'janta' ? 0 : 30, 0, 0);
+}
+
+function horarioFechamentoAtingido(dataIso, tipoRefeicao, agora = new Date()) {
+  if (!eDiaUtilRefeicao(dataIso)) return false;
+  const hoje = obterDataLocalIso(agora);
+  if (dataIso < hoje) return true;
+  if (dataIso > hoje) return false;
+  return agora >= obterLimiteFechamentoRefeicao(dataIso, tipoRefeicao);
+}
+
+async function obterRefeicoesParaFechamento(dataIso, tipoRefeicao) {
+  const [usuariosSnapshot, reservasSnapshot, excecoesSnapshot, afastamentosSnapshot] = await Promise.all([
+    getDocs(collection(db, 'usuarios')),
+    getDocs(query(collection(db, 'reservas_refeicao'), where('data', '==', dataIso))),
+    getDocs(query(collection(db, 'excecoes_refeicao'), where('data', '==', dataIso))),
+    getDocs(collection(db, 'afastamentos'))
+  ]);
+
+  const usuarios = usuariosSnapshot.docs.map((item) => ({ uid: item.id, ...item.data() }));
+  const reservas = reservasSnapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+  const excecoes = excecoesSnapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+  const afastamentos = afastamentosSnapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+
+  return combinarRefeicoes([dataIso], reservas, excecoes, usuarios, afastamentos)
+    .filter((item) => item.tipo === normalizarTipoRefeicao(tipoRefeicao))
+    .sort((a, b) => a.colaboradorNome.localeCompare(b.colaboradorNome, 'pt-BR'))
+    .map((item) => ({
+      colaboradorUid: item.colaboradorUid,
+      colaboradorNome: item.colaboradorNome,
+      origem: item.recorrente ? 'permanente' : 'manual'
+    }));
+}
+
+async function gerarOuObterFechamentoRefeicao(dataIso, tipoRefeicao) {
+  const tipo = normalizarTipoRefeicao(tipoRefeicao);
+  const referencia = doc(db, 'fechamentos_refeicoes', criarIdFechamentoRefeicao(dataIso, tipo));
+  const existente = await getDoc(referencia);
+  if (existente.exists()) return { id: existente.id, fechado: true, ...existente.data() };
+
+  const refeicoes = await obterRefeicoesParaFechamento(dataIso, tipo);
+  if (!horarioFechamentoAtingido(dataIso, tipo)) {
+    return {
+      id: referencia.id,
+      data: dataIso,
+      tipo,
+      limite: tipo === 'janta' ? '14:00' : '08:30',
+      quantidade: refeicoes.length,
+      refeicoes,
+      fechado: false
+    };
+  }
+
+  const criado = await runTransaction(db, async (transacao) => {
+    const snapshot = await transacao.get(referencia);
+    if (snapshot.exists()) return false;
+    transacao.set(referencia, {
+      data: dataIso,
+      tipo,
+      limite: tipo === 'janta' ? '14:00' : '08:30',
+      quantidade: refeicoes.length,
+      refeicoes,
+      fechadoEm: serverTimestamp(),
+      geradoAutomaticamente: true,
+      geradoPorUid: currentUserData.uid,
+      geradoPorNome: currentUserData.nome || currentUserData.email || 'Administrador'
+    });
+    return true;
+  });
+  if (criado) {
+    await registrarAuditoria('fechamento_refeicao_gerado', 'fechamentos_refeicoes', {
+      data: dataIso,
+      tipo,
+      quantidade: refeicoes.length
+    });
+  }
+
+  const salvo = await getDoc(referencia);
+  return { id: salvo.id, fechado: true, ...salvo.data() };
+}
+
+function obterElementosFechamento(tipoRefeicao) {
+  return normalizarTipoRefeicao(tipoRefeicao) === 'janta'
+    ? { status: mealCloseDinnerStatus, total: mealCloseDinnerTotal, lista: mealCloseDinnerList, imprimir: mealCloseDinnerPrint }
+    : { status: mealCloseLunchStatus, total: mealCloseLunchTotal, lista: mealCloseLunchList, imprimir: mealCloseLunchPrint };
+}
+
+function renderizarFechamentoRefeicao(tipoRefeicao, fechamento) {
+  const tipo = normalizarTipoRefeicao(tipoRefeicao);
+  const elementos = obterElementosFechamento(tipo);
+  if (!elementos.lista || !elementos.total || !elementos.status) return;
+  const fimDeSemana = !eDiaUtilRefeicao(fechamento?.data || mealCloseDate?.value);
+  const refeicoes = Array.isArray(fechamento?.refeicoes) ? fechamento.refeicoes : [];
+
+  elementos.total.textContent = refeicoes.length;
+  elementos.status.className = 'meal-close-status';
+  if (fimDeSemana) {
+    elementos.status.textContent = 'Sem serviço';
+    elementos.status.classList.add('weekend');
+  } else if (fechamento?.fechado) {
+    elementos.status.textContent = 'Fechado';
+    elementos.status.classList.add('closed');
+  } else {
+    elementos.status.textContent = `Prévia até ${fechamento?.limite || (tipo === 'janta' ? '14:00' : '08:30')}`;
+    elementos.status.classList.add('preview');
+  }
+
+  if (refeicoes.length === 0) {
+    elementos.lista.innerHTML = `<p class="meal-close-empty">${fimDeSemana ? 'Não há refeições aos sábados e domingos.' : 'Nenhuma reserva nesta lista.'}</p>`;
+  } else {
+    elementos.lista.innerHTML = refeicoes.map((item, indice) => `
+      <div class="meal-close-person">
+        <span>${indice + 1}</span>
+        <strong>${escaparHtml(item.colaboradorNome || 'Colaborador')}</strong>
+        <small>${item.origem === 'permanente' ? 'Fixo' : 'Reserva'}</small>
+      </div>
+    `).join('');
+  }
+  if (elementos.imprimir) elementos.imprimir.disabled = !fechamento?.fechado || fimDeSemana;
+}
+
+async function carregarPainelFechamentoRefeicoes() {
+  if (currentUserData?.role !== 'admin' || !mealCloseDate) return;
+  if (!mealCloseDate.value) mealCloseDate.value = obterDataLocalIso();
+  const dataIso = mealCloseDate.value;
+
+  [mealCloseLunchStatus, mealCloseDinnerStatus].forEach((elemento) => {
+    if (elemento) {
+      elemento.textContent = 'Carregando';
+      elemento.className = 'meal-close-status';
+    }
+  });
+
+  try {
+    if (!eDiaUtilRefeicao(dataIso)) {
+      fechamentosExibidos = {
+        almoco: { data: dataIso, tipo: 'almoco', quantidade: 0, refeicoes: [], fechado: false },
+        janta: { data: dataIso, tipo: 'janta', quantidade: 0, refeicoes: [], fechado: false }
+      };
+    } else {
+      const [almoco, janta] = await Promise.all([
+        gerarOuObterFechamentoRefeicao(dataIso, 'almoco'),
+        gerarOuObterFechamentoRefeicao(dataIso, 'janta')
+      ]);
+      fechamentosExibidos = { almoco, janta };
+    }
+    renderizarFechamentoRefeicao('almoco', fechamentosExibidos.almoco);
+    renderizarFechamentoRefeicao('janta', fechamentosExibidos.janta);
+  } catch (error) {
+    console.error('Erro ao preparar fechamento de refeições:', error);
+    Swal.fire({ icon: 'error', title: 'Não foi possível preparar as listas', text: error.message, confirmButtonColor: '#0F172A' });
+  }
+}
+
+function formatarDataCompletaRefeicao(dataIso) {
+  const [ano, mes, dia] = dataIso.split('-').map(Number);
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full' }).format(new Date(ano, mes - 1, dia));
+}
+
+function imprimirFechamentoRefeicao(tipoRefeicao) {
+  const tipo = normalizarTipoRefeicao(tipoRefeicao);
+  const fechamento = fechamentosExibidos[tipo];
+  if (!fechamento?.fechado) return;
+  const titulo = tipo === 'janta' ? 'Janta' : 'Almoço';
+  const linhas = (fechamento.refeicoes || []).map((item, indice) => `
+    <tr><td>${indice + 1}</td><td>${escaparHtml(item.colaboradorNome || 'Colaborador')}</td><td>${item.origem === 'permanente' ? 'Fixo' : 'Reserva'}</td><td></td></tr>
+  `).join('') || '<tr><td colspan="4">Nenhuma reserva</td></tr>';
+
+  abrirDocumentoImpressao(`Fechamento de ${titulo}`, `
+    <header class="document-header"><div><span>T&amp;T Transportes</span><h1>Fechamento de ${titulo}</h1></div><strong>${escaparHtml(fechamento.data)}</strong></header>
+    <section class="document-info"><p><b>Data:</b> ${escaparHtml(formatarDataCompletaRefeicao(fechamento.data))}</p><p><b>Horário limite:</b> ${escaparHtml(fechamento.limite)}</p><p><b>Total:</b> ${fechamento.refeicoes?.length || 0}</p></section>
+    <section class="report-section"><table><thead><tr><th>Nº</th><th>Colaborador</th><th>Origem</th><th>Conferência</th></tr></thead><tbody>${linhas}</tbody></table></section>
+  `);
+}
+
+function encerrarFechamentoAutomaticoRefeicoes() {
+  if (timerFechamentoRefeicoes) window.clearTimeout(timerFechamentoRefeicoes);
+  timerFechamentoRefeicoes = null;
+}
+
+async function processarFechamentosDoDia() {
+  if (currentUserData?.role !== 'admin') return;
+  const hoje = obterDataLocalIso();
+  if (!eDiaUtilRefeicao(hoje)) return;
+  for (const tipo of ['almoco', 'janta']) {
+    if (horarioFechamentoAtingido(hoje, tipo)) {
+      try {
+        await gerarOuObterFechamentoRefeicao(hoje, tipo);
+      } catch (error) {
+        console.error(`Erro no fechamento automático de ${tipo}:`, error);
+      }
+    }
+  }
+  if (mealCloseDate?.value === hoje && document.getElementById('sec-fechamentos')?.classList.contains('active-section')) {
+    await carregarPainelFechamentoRefeicoes();
+  }
+}
+
+function obterProximoHorarioFechamento() {
+  const agora = new Date();
+  const candidato = new Date(agora);
+  for (let dias = 0; dias < 8; dias++) {
+    const dataIso = obterDataLocalIso(candidato);
+    if (eDiaUtilRefeicao(dataIso)) {
+      for (const tipo of ['almoco', 'janta']) {
+        const limite = obterLimiteFechamentoRefeicao(dataIso, tipo);
+        if (limite > agora) return limite;
+      }
+    }
+    candidato.setDate(candidato.getDate() + 1);
+    candidato.setHours(0, 0, 0, 0);
+  }
+  return new Date(agora.getTime() + 60 * 60 * 1000);
+}
+
+function iniciarFechamentoAutomaticoRefeicoes() {
+  encerrarFechamentoAutomaticoRefeicoes();
+  if (currentUserData?.role !== 'admin') return;
+  processarFechamentosDoDia();
+  const proximoHorario = obterProximoHorarioFechamento();
+  const espera = Math.max(1000, proximoHorario.getTime() - Date.now() + 1000);
+  timerFechamentoRefeicoes = window.setTimeout(async () => {
+    await processarFechamentosDoDia();
+    iniciarFechamentoAutomaticoRefeicoes();
+  }, espera);
+}
+
+if (mealCloseDate) mealCloseDate.addEventListener('change', carregarPainelFechamentoRefeicoes);
+if (mealCloseRefresh) mealCloseRefresh.addEventListener('click', carregarPainelFechamentoRefeicoes);
+if (mealCloseLunchPrint) mealCloseLunchPrint.addEventListener('click', () => imprimirFechamentoRefeicao('almoco'));
+if (mealCloseDinnerPrint) mealCloseDinnerPrint.addEventListener('click', () => imprimirFechamentoRefeicao('janta'));
+
+window.addEventListener('online', () => {
+  if (currentUserData?.role === 'admin') processarFechamentosDoDia();
+});
 
 if (monthlyMealMonth) {
   monthlyMealMonth.addEventListener('change', () => {
@@ -3949,6 +5092,7 @@ if (menuForm) {
         sobremesa,
         atualizadoEm: serverTimestamp()
       });
+      await registrarAuditoria('cardapio_salvo', 'cardapio', { data: dataCardapio, pratoPrincipal });
 
       menuForm.reset();
       Swal.fire({ icon: 'success', title: 'Cardápio salvo com sucesso!', confirmButtonColor: '#0284C7' });
@@ -4008,9 +5152,10 @@ async function buscarCardapioPorData(dataStr) {
 
 function ouvirCardapioSemanal() {
   if (!weeklyMenuList) return;
-  const q = query(collection(db, "cardapio"), orderBy("atualizadoEm", "desc"));
+  if (cancelarOuvinteCardapio) cancelarOuvinteCardapio();
+  const q = query(collection(db, "cardapio"), orderBy("atualizadoEm", "desc"), limit(90));
 
-  onSnapshot(q, (snapshot) => {
+  cancelarOuvinteCardapio = onSnapshot(q, (snapshot) => {
     cardapiosSemanaisCache = snapshot.docs.map((docSnap) => ({
       id: docSnap.id,
       dados: docSnap.data()
@@ -4043,7 +5188,7 @@ function renderizarCardapiosSemanais() {
         ? `<p style="font-size: 0.85rem; color: #475569; margin: 2px 0;"><strong>Arroz e feijão:</strong> ${escaparHtml(cardapio.arrozFeijao)}</p>`
         : '';
       card.innerHTML = `
-        <span class="kpi-label" style="font-weight: 600; color: #0284C7; font-size: 0.85rem;">📅 ${dataFormatada}</span>
+        <span class="kpi-label inline-icon-label" style="font-weight: 600; color: #0284C7; font-size: 0.85rem;">${obterIconeInterface('calendar')}<span>${dataFormatada}</span></span>
         <h4 style="margin: 6px 0; font-size: 1rem; color: #0F172A; font-weight: 600;">${escaparHtml(cardapio.pratoPrincipal)}</h4>
         <p style="font-size: 0.85rem; color: #475569; margin: 2px 0;"><strong>Acompanhamento:</strong> ${escaparHtml(cardapio.acompanhamento)}</p>
         ${linhaArrozFeijao}
@@ -4059,3 +5204,435 @@ function renderizarCardapiosSemanais() {
       weeklyMenuList.appendChild(card);
   });
 }
+
+// =============================================================
+// RELATÓRIOS, AUDITORIA, BACKUP E DOCUMENTOS PARA IMPRESSÃO
+// =============================================================
+const COLECOES_BACKUP = [
+  'usuarios',
+  'avisos',
+  'cardapio',
+  'reservas_refeicao',
+  'excecoes_refeicao',
+  'fechamentos_refeicoes',
+  'manutencoes',
+  'ocorrencias',
+  'marketplace',
+  'estoque_epi',
+  'solicitacoes_epi',
+  'movimentacoes_epi',
+  'afastamentos',
+  'auditoria',
+  'configuracoes'
+];
+
+function formatarMoeda(valor) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor) || 0);
+}
+
+function normalizarNomeArquivo(valor) {
+  return String(valor || 'arquivo')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+}
+
+function baixarArquivo(nome, conteudo, tipo = 'text/plain;charset=utf-8') {
+  const blob = conteudo instanceof Blob ? conteudo : new Blob([conteudo], { type: tipo });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = normalizarNomeArquivo(nome);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function escaparCsv(valor) {
+  const texto = String(valor ?? '');
+  return `"${texto.replaceAll('"', '""')}"`;
+}
+
+function baixarCsv(nome, linhas) {
+  const conteudo = '\uFEFF' + linhas.map((linha) => linha.map(escaparCsv).join(';')).join('\r\n');
+  baixarArquivo(nome, conteudo, 'text/csv;charset=utf-8');
+}
+
+function abrirDocumentoImpressao(titulo, conteudoHtml) {
+  const janela = window.open('', '_blank');
+  if (!janela) {
+    Swal.fire({ icon: 'info', title: 'Permita a nova janela', text: 'O navegador bloqueou a abertura do documento. Libere pop-ups para gerar o PDF.', confirmButtonColor: '#0F172A' });
+    return;
+  }
+  janela.opener = null;
+
+  janela.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${escaparHtml(titulo)}</title><style>
+    *{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#172033;margin:0;padding:32px;font-size:12px}h1,h2,h3,p{margin-top:0}.document-header{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;border-bottom:3px solid #EAB308;padding-bottom:18px;margin-bottom:24px}.document-header span{font-weight:700;color:#A16207;text-transform:uppercase;letter-spacing:.08em}.document-header h1{font-size:24px;margin:5px 0 0}.document-header>strong{white-space:nowrap;background:#F8FAFC;border:1px solid #CBD5E1;padding:9px 12px;border-radius:6px}.document-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;margin-bottom:20px}.document-info p{margin:0;padding:8px;background:#F8FAFC;border-radius:5px}table{width:100%;border-collapse:collapse;margin:14px 0 22px}th,td{padding:9px;border:1px solid #CBD5E1;text-align:left}th{background:#F1F5F9;font-size:11px;text-transform:uppercase}.document-confirmation{padding:12px;border:1px solid #CBD5E1;border-radius:6px;background:#F8FAFC}.document-signatures{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:70px}.document-signatures span{border-top:1px solid #334155;padding-top:8px;text-align:center}.report-section{margin:24px 0;break-inside:avoid}.report-section h2{font-size:16px;border-bottom:1px solid #CBD5E1;padding-bottom:7px}.report-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}.report-kpis div{border:1px solid #CBD5E1;border-radius:6px;padding:10px}.report-kpis strong{display:block;font-size:17px;margin-top:4px}@media print{body{padding:0}@page{size:A4;margin:14mm}.print-action{display:none}}@media(max-width:600px){body{padding:18px}.document-info,.document-signatures,.report-kpis{grid-template-columns:1fr}.document-header{flex-direction:column}}
+  </style></head><body>${conteudoHtml}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));<\/script></body></html>`);
+  janela.document.close();
+}
+
+function limparDetalhesAuditoria(valor) {
+  if (valor === undefined) return null;
+  if (valor === null || typeof valor !== 'object') return valor;
+  if (Array.isArray(valor)) return valor.map(limparDetalhesAuditoria);
+  return Object.fromEntries(
+    Object.entries(valor)
+      .filter(([, item]) => item !== undefined)
+      .map(([chave, item]) => [chave, limparDetalhesAuditoria(item)])
+  );
+}
+
+async function registrarAuditoria(acao, modulo, detalhes = {}) {
+  if (currentUserData?.role !== 'admin') return;
+  try {
+    await addDoc(collection(db, 'auditoria'), {
+      acao,
+      modulo,
+      detalhes: limparDetalhesAuditoria(detalhes),
+      administradorUid: currentUserData.uid,
+      administradorNome: currentUserData.nome || currentUserData.email || 'Administrador',
+      criadoEm: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Erro ao registrar auditoria:', error);
+  }
+}
+
+function traduzirAcaoAuditoria(acao) {
+  return ({
+    estoque_minimo_alterado: 'Alterou estoque mínimo',
+    movimentacao_epi: 'Registrou movimentação de EPI',
+    epi_aprovado: 'Aprovou solicitação de EPI',
+    epi_recusado: 'Recusou solicitação de EPI',
+    epi_retirado: 'Confirmou retirada de EPI',
+    afastamento_criado: 'Registrou afastamento',
+    afastamento_excluido: 'Excluiu afastamento',
+    refeicao_fixa_alterada: 'Alterou refeição permanente',
+    refeicao_desconsiderada: 'Desconsiderou refeição',
+    refeicao_reconsiderada: 'Reconsiderou refeição',
+    cardapio_salvo: 'Salvou cardápio',
+    cardapio_excluido: 'Excluiu cardápio',
+    aviso_publicado: 'Publicou aviso',
+    aviso_excluido: 'Excluiu aviso',
+    manutencao_concluida: 'Concluiu manutenção',
+    ocorrencia_status_alterado: 'Atualizou ocorrência',
+    fechamento_refeicao_gerado: 'Gerou fechamento de refeições',
+    backup_exportado: 'Exportou backup',
+    backup_restaurado: 'Restaurou backup'
+  })[acao] || String(acao || 'Ação administrativa').replaceAll('_', ' ');
+}
+
+function renderizarAuditoriaAdmin() {
+  if (!auditList) return;
+  const registros = ordenarRegistrosEpi(auditoriaAdminCache).slice(0, 30);
+  if (registros.length === 0) {
+    auditList.innerHTML = '<p class="reports-empty">Nenhuma ação registrada até o momento.</p>';
+    return;
+  }
+  auditList.innerHTML = registros.map((item) => `
+    <div class="audit-row">
+      <span></span>
+      <div><strong>${escaparHtml(traduzirAcaoAuditoria(item.acao))}</strong><small>${escaparHtml(item.administradorNome || 'Administrador')} · ${formatarDataHoraEpi(item.criadoEm)}</small></div>
+    </div>
+  `).join('');
+}
+
+function atualizarStatusBackup(configuracao) {
+  if (!backupStatus) return;
+  const ultimaData = obterDataOpcionalEpi(configuracao?.ultimoBackupEm);
+  if (!ultimaData) {
+    backupStatus.textContent = 'Nenhum backup registrado. Recomendação: gere uma cópia agora.';
+    backupStatus.classList.add('warning');
+    return;
+  }
+  const dias = Math.floor((Date.now() - ultimaData.getTime()) / 86400000);
+  backupStatus.textContent = `Último backup: ${formatarDataHoraEpi(ultimaData)}${dias >= 7 ? ' — novo backup recomendado' : ''}.`;
+  backupStatus.classList.toggle('warning', dias >= 7);
+}
+
+function encerrarOuvintesRelatorios() {
+  canceladoresRelatorios.forEach((cancelar) => cancelar());
+  canceladoresRelatorios = [];
+}
+
+function iniciarOuvintesRelatorios() {
+  encerrarOuvintesRelatorios();
+  if (currentUserData?.role !== 'admin') return;
+  const cancelarAuditoria = onSnapshot(query(collection(db, 'auditoria'), orderBy('criadoEm', 'desc'), limit(30)), (snapshot) => {
+    auditoriaAdminCache = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+    renderizarAuditoriaAdmin();
+  }, (error) => console.error('Erro ao acompanhar auditoria:', error));
+  const cancelarBackup = onSnapshot(doc(db, 'configuracoes', 'backup'), (snapshot) => {
+    atualizarStatusBackup(snapshot.exists() ? snapshot.data() : null);
+  }, (error) => console.error('Erro ao acompanhar status do backup:', error));
+  canceladoresRelatorios.push(cancelarAuditoria, cancelarBackup);
+}
+
+function dataPertenceAoMes(valor, mes) {
+  const data = obterDataOpcionalEpi(valor);
+  return Boolean(data && obterDataLocalIso(data).startsWith(mes));
+}
+
+async function carregarRelatoriosAdmin() {
+  if (currentUserData?.role !== 'admin' || !reportMonth) return;
+  const mes = /^\d{4}-\d{2}$/.test(reportMonth.value) ? reportMonth.value : obterMesAtualIso();
+  reportMonth.value = mes;
+  reportsLoading?.classList.remove('hidden');
+  if (reportRefresh) reportRefresh.disabled = true;
+
+  try {
+    const [usuariosSnap, reservasSnap, excecoesSnap, solicitacoesSnap, manutencoesSnap, ocorrenciasSnap, movimentacoesSnap, afastamentosSnap] = await Promise.all([
+      getDocs(collection(db, 'usuarios')),
+      getDocs(collection(db, 'reservas_refeicao')),
+      getDocs(collection(db, 'excecoes_refeicao')),
+      getDocs(collection(db, 'solicitacoes_epi')),
+      getDocs(collection(db, 'manutencoes')),
+      getDocs(collection(db, 'ocorrencias')),
+      getDocs(collection(db, 'movimentacoes_epi')),
+      getDocs(collection(db, 'afastamentos'))
+    ]);
+
+    usuariosRefeicoesCache = usuariosSnap.docs.map((item) => ({ uid: item.id, ...item.data() }));
+    afastamentosAdminCache = afastamentosSnap.docs.map((item) => ({ id: item.id, ...item.data() }));
+    preencherSelectsColaboradores();
+    const colaboradorUid = reportUser?.value || '';
+    const reservas = reservasSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.data?.startsWith(mes));
+    const excecoes = excecoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.data?.startsWith(mes));
+    let refeicoes = combinarRefeicoes(listarDatasDoMes(mes), reservas, excecoes);
+    let entregas = solicitacoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.status === 'retirado' && dataPertenceAoMes(item.retiradoEm, mes));
+    let manutencoes = manutencoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => dataPertenceAoMes(item.criadoEm, mes));
+    let ocorrencias = ocorrenciasSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.data?.startsWith(mes));
+    let movimentacoes = movimentacoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => dataPertenceAoMes(item.criadoEm, mes));
+
+    if (colaboradorUid) {
+      refeicoes = refeicoes.filter((item) => item.colaboradorUid === colaboradorUid);
+      entregas = entregas.filter((item) => item.colaboradorUid === colaboradorUid);
+      manutencoes = manutencoes.filter((item) => item.colaboradorUid === colaboradorUid);
+      ocorrencias = ocorrencias.filter((item) => item.colaboradorUid === colaboradorUid);
+      movimentacoes = movimentacoes.filter((item) => item.colaboradorUid === colaboradorUid);
+    }
+
+    const refeicoesPorColaborador = new Map();
+    refeicoes.forEach((item) => {
+      if (!refeicoesPorColaborador.has(item.colaboradorUid)) {
+        refeicoesPorColaborador.set(item.colaboradorUid, { colaboradorUid: item.colaboradorUid, nome: item.colaboradorNome, almocos: 0, jantas: 0 });
+      }
+      const resumo = refeicoesPorColaborador.get(item.colaboradorUid);
+      if (item.tipo === 'janta') resumo.jantas += 1;
+      else resumo.almocos += 1;
+    });
+    const resumoRefeicoes = [...refeicoesPorColaborador.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    relatorioAdminCache = { mes, colaboradorUid, refeicoes, resumoRefeicoes, entregas, manutencoes, ocorrencias, movimentacoes };
+    renderizarRelatoriosAdmin();
+  } catch (error) {
+    console.error('Erro ao preparar relatórios:', error);
+    Swal.fire({ icon: 'error', title: 'Não foi possível preparar o relatório', text: error.message, confirmButtonColor: '#0F172A' });
+  } finally {
+    reportsLoading?.classList.add('hidden');
+    if (reportRefresh) reportRefresh.disabled = false;
+  }
+}
+
+function renderizarRelatoriosAdmin() {
+  if (!relatorioAdminCache) return;
+  const { refeicoes, resumoRefeicoes, entregas, manutencoes, ocorrencias, movimentacoes } = relatorioAdminCache;
+  if (reportMealsTotal) reportMealsTotal.textContent = refeicoes.length;
+  if (reportMealsValue) reportMealsValue.textContent = formatarMoeda(refeicoes.length * PRECO_REFEICAO);
+  if (reportEpiDeliveries) reportEpiDeliveries.textContent = entregas.length;
+  if (reportMaintenanceTotal) reportMaintenanceTotal.textContent = manutencoes.length;
+  if (reportOccurrenceTotal) reportOccurrenceTotal.textContent = ocorrencias.length;
+  if (reportStockMovements) reportStockMovements.textContent = movimentacoes.length;
+
+  if (reportMealsBody) {
+    reportMealsBody.innerHTML = resumoRefeicoes.length ? resumoRefeicoes.map((item) => {
+      const total = item.almocos + item.jantas;
+      return `<tr><td>${escaparHtml(item.nome)}</td><td>${item.almocos}</td><td>${item.jantas}</td><td>${total}</td><td>${formatarMoeda(total * PRECO_REFEICAO)}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" class="reports-empty-cell">Nenhuma refeição encontrada.</td></tr>';
+  }
+
+  if (reportEpiList) {
+    reportEpiList.innerHTML = entregas.length ? ordenarRegistrosEpi(entregas).map((item) => `
+      <article><strong>${escaparHtml(item.colaboradorNome || 'Colaborador')}</strong><span>${(item.itens || []).map((produto) => `${Number(produto.quantidade) || 1}x ${produto.nome}${produto.variacao && produto.variacao !== 'Único' ? ` ${produto.variacao}` : ''}`).map(escaparHtml).join(', ')}</span><small>${formatarDataHoraEpi(item.retiradoEm)} · ${item.entregaConfirmada ? 'Confirmado' : 'Aguardando confirmação'}</small></article>
+    `).join('') : '<p class="reports-empty">Nenhuma entrega no período.</p>';
+  }
+
+  if (reportMaintenanceList) {
+    reportMaintenanceList.innerHTML = manutencoes.length ? ordenarRegistrosEpi(manutencoes).map((item) => `
+      <article><strong>${escaparHtml(item.veiculo || 'Veículo')} · ${escaparHtml(item.placa || '')}</strong><span>${escaparHtml(item.tipo || 'Manutenção')}</span><small>${formatarDataHoraEpi(item.criadoEm)} · ${escaparHtml(item.status || 'Pendente')}</small></article>
+    `).join('') : '<p class="reports-empty">Nenhuma manutenção no período.</p>';
+  }
+
+  if (reportOccurrenceList) {
+    reportOccurrenceList.innerHTML = ocorrencias.length ? [...ocorrencias].sort((a, b) => obterDataOcorrencia(b) - obterDataOcorrencia(a)).map((item) => `
+      <article><strong>${escaparHtml(item.veiculo || 'Veículo')} · ${escaparHtml(item.placa || '')}</strong><span>${escaparHtml(item.tipo || 'Ocorrência')}</span><small>${obterDataOcorrencia(item).toLocaleString('pt-BR')} · ${escaparHtml(item.status || 'Aberta')}</small></article>
+    `).join('') : '<p class="reports-empty">Nenhuma ocorrência no período.</p>';
+  }
+
+  if (reportStockBody) {
+    reportStockBody.innerHTML = movimentacoes.length ? ordenarRegistrosEpi(movimentacoes).map((item) => `
+      <tr><td>${formatarDataHoraEpi(item.criadoEm)}</td><td>${escaparHtml(item.nome)}${item.variacao && item.variacao !== 'Único' ? ` · ${escaparHtml(item.variacao)}` : ''}</td><td>${item.tipo === 'entrada' ? 'Entrada' : 'Saída'}</td><td>${Number(item.quantidade) || 0}</td><td>${escaparHtml(item.responsavelNome || 'Administrador')}</td></tr>
+    `).join('') : '<tr><td colspan="5" class="reports-empty-cell">Nenhuma movimentação encontrada.</td></tr>';
+  }
+}
+
+function limparInterfaceRelatorios() {
+  if (reportMealsTotal) reportMealsTotal.textContent = '0';
+  if (reportMealsValue) reportMealsValue.textContent = 'R$ 0,00';
+  if (reportEpiDeliveries) reportEpiDeliveries.textContent = '0';
+  if (reportMaintenanceTotal) reportMaintenanceTotal.textContent = '0';
+  if (reportOccurrenceTotal) reportOccurrenceTotal.textContent = '0';
+  if (reportStockMovements) reportStockMovements.textContent = '0';
+  if (reportMealsBody) reportMealsBody.replaceChildren();
+  if (reportEpiList) reportEpiList.replaceChildren();
+  if (reportMaintenanceList) reportMaintenanceList.replaceChildren();
+  if (reportOccurrenceList) reportOccurrenceList.replaceChildren();
+  if (reportStockBody) reportStockBody.replaceChildren();
+  if (auditList) auditList.replaceChildren();
+}
+
+function exportarRelatorioCsv() {
+  if (!relatorioAdminCache) return;
+  const linhas = [['Categoria', 'Data', 'Colaborador', 'Descrição', 'Tipo', 'Quantidade', 'Valor', 'Responsável']];
+  relatorioAdminCache.refeicoes.forEach((item) => linhas.push(['Refeição', item.data, item.colaboradorNome, item.tipo === 'janta' ? 'Janta' : 'Almoço', item.recorrente ? 'Permanente' : 'Manual', 1, PRECO_REFEICAO, '']));
+  relatorioAdminCache.entregas.forEach((item) => linhas.push(['Entrega de EPI', formatarDataHoraEpi(item.retiradoEm), item.colaboradorNome, (item.itens || []).map((produto) => `${produto.quantidade || 1}x ${produto.nome} ${produto.variacao || ''}`).join(' | '), 'Retirada', item.totalItens || 0, '', item.retiradaConfirmadaPorNome || '']));
+  relatorioAdminCache.manutencoes.forEach((item) => linhas.push(['Manutenção', formatarDataHoraEpi(item.criadoEm), item.colaboradorNome || '', `${item.veiculo || ''} ${item.placa || ''} - ${item.descricao || ''}`, item.status || '', 1, '', '']));
+  relatorioAdminCache.ocorrencias.forEach((item) => linhas.push(['Ocorrência', `${item.data || ''} ${item.hora || ''}`.trim(), item.colaboradorNome || '', `${item.veiculo || ''} ${item.placa || ''} - ${item.descricao || ''}`, item.status || '', 1, '', item.motorista || '']));
+  relatorioAdminCache.movimentacoes.forEach((item) => linhas.push(['Movimentação de EPI', formatarDataHoraEpi(item.criadoEm), item.colaboradorNome || '', `${item.nome || ''} ${item.variacao || ''}`, item.tipo || '', item.quantidade || 0, '', item.responsavelNome || '']));
+  baixarCsv(`relatorio-administrativo-${relatorioAdminCache.mes}.csv`, linhas);
+}
+
+function gerarRelatorioPdf() {
+  if (!relatorioAdminCache) return;
+  const dados = relatorioAdminCache;
+  const colaborador = reportUser?.selectedOptions?.[0]?.textContent || 'Todos os colaboradores';
+  const tabelaRefeicoes = dados.resumoRefeicoes.map((item) => `<tr><td>${escaparHtml(item.nome)}</td><td>${item.almocos}</td><td>${item.jantas}</td><td>${item.almocos + item.jantas}</td><td>${formatarMoeda((item.almocos + item.jantas) * PRECO_REFEICAO)}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
+  const tabelaEntregas = dados.entregas.map((item) => `<tr><td>${formatarDataHoraEpi(item.retiradoEm)}</td><td>${escaparHtml(item.colaboradorNome)}</td><td>${escaparHtml((item.itens || []).map((produto) => `${produto.quantidade || 1}x ${produto.nome} ${produto.variacao || ''}`).join(', '))}</td><td>${item.entregaConfirmada ? 'Confirmado' : 'Pendente'}</td></tr>`).join('') || '<tr><td colspan="4">Nenhum registro</td></tr>';
+  const tabelaManutencoes = dados.manutencoes.map((item) => `<tr><td>${formatarDataHoraEpi(item.criadoEm)}</td><td>${escaparHtml(item.veiculo || '')}</td><td>${escaparHtml(item.placa || '')}</td><td>${escaparHtml(item.tipo || '')}</td><td>${escaparHtml(item.status || '')}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
+  const tabelaOcorrencias = dados.ocorrencias.map((item) => `<tr><td>${escaparHtml(`${item.data || ''} ${item.hora || ''}`.trim())}</td><td>${escaparHtml(item.motorista || item.colaboradorNome || '')}</td><td>${escaparHtml(item.veiculo || '')}</td><td>${escaparHtml(item.tipo || '')}</td><td>${escaparHtml(item.status || '')}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
+  const tabelaMovimentos = dados.movimentacoes.map((item) => `<tr><td>${formatarDataHoraEpi(item.criadoEm)}</td><td>${escaparHtml(item.nome || '')}</td><td>${escaparHtml(item.variacao || '')}</td><td>${item.tipo === 'entrada' ? 'Entrada' : 'Saída'}</td><td>${item.quantidade || 0}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
+  abrirDocumentoImpressao(`Relatório ${dados.mes}`, `
+    <header class="document-header"><div><span>T&amp;T Transportes</span><h1>Relatório administrativo mensal</h1></div><strong>${escaparHtml(dados.mes)}</strong></header>
+    <section class="document-info"><p><b>Filtro:</b> ${escaparHtml(colaborador)}</p><p><b>Gerado em:</b> ${new Date().toLocaleString('pt-BR')}</p></section>
+    <div class="report-kpis"><div>Refeições<strong>${dados.refeicoes.length}</strong></div><div>Gasto<strong>${formatarMoeda(dados.refeicoes.length * PRECO_REFEICAO)}</strong></div><div>Entregas de EPI<strong>${dados.entregas.length}</strong></div><div>Manutenções<strong>${dados.manutencoes.length}</strong></div><div>Ocorrências<strong>${dados.ocorrencias.length}</strong></div></div>
+    <section class="report-section"><h2>Refeições</h2><table><thead><tr><th>Colaborador</th><th>Almoços</th><th>Jantas</th><th>Total</th><th>Valor</th></tr></thead><tbody>${tabelaRefeicoes}</tbody></table></section>
+    <section class="report-section"><h2>Entregas de EPI</h2><table><thead><tr><th>Data</th><th>Colaborador</th><th>Itens</th><th>Confirmação</th></tr></thead><tbody>${tabelaEntregas}</tbody></table></section>
+    <section class="report-section"><h2>Manutenções</h2><table><thead><tr><th>Data</th><th>Veículo</th><th>Placa</th><th>Tipo</th><th>Status</th></tr></thead><tbody>${tabelaManutencoes}</tbody></table></section>
+    <section class="report-section"><h2>Acidentes e ocorrências</h2><table><thead><tr><th>Data</th><th>Motorista</th><th>Veículo</th><th>Tipo</th><th>Status</th></tr></thead><tbody>${tabelaOcorrencias}</tbody></table></section>
+    <section class="report-section"><h2>Movimentações de estoque</h2><table><thead><tr><th>Data</th><th>Item</th><th>Tamanho</th><th>Tipo</th><th>Qtd.</th></tr></thead><tbody>${tabelaMovimentos}</tbody></table></section>
+  `);
+}
+
+function serializarValorBackup(valor) {
+  if (valor?.toDate) return { __tipo: 'timestamp', valor: valor.toDate().toISOString() };
+  if (valor instanceof Date) return { __tipo: 'timestamp', valor: valor.toISOString() };
+  if (Array.isArray(valor)) return valor.map(serializarValorBackup);
+  if (valor && typeof valor === 'object') {
+    return Object.fromEntries(Object.entries(valor).map(([chave, item]) => [chave, serializarValorBackup(item)]));
+  }
+  return valor;
+}
+
+function restaurarValorBackup(valor) {
+  if (Array.isArray(valor)) return valor.map(restaurarValorBackup);
+  if (valor && typeof valor === 'object') {
+    if (valor.__tipo === 'timestamp' && valor.valor) return Timestamp.fromDate(new Date(valor.valor));
+    return Object.fromEntries(Object.entries(valor).map(([chave, item]) => [chave, restaurarValorBackup(item)]));
+  }
+  return valor;
+}
+
+async function gerarBackupAdmin() {
+  if (currentUserData?.role !== 'admin') return;
+  backupDownload.disabled = true;
+  atualizarConteudoBotao(backupDownload, 'Preparando backup...', 'backup');
+  try {
+    const colecoes = {};
+    for (const nomeColecao of COLECOES_BACKUP) {
+      const snapshot = await getDocs(collection(db, nomeColecao));
+      colecoes[nomeColecao] = Object.fromEntries(snapshot.docs.map((item) => [item.id, serializarValorBackup(item.data())]));
+    }
+    const backup = {
+      formato: 'tt-transportes-backup',
+      versao: 1,
+      projeto: 'site-tet-transportes',
+      criadoEm: new Date().toISOString(),
+      criadoPor: { uid: currentUserData.uid, nome: currentUserData.nome || currentUserData.email },
+      colecoes
+    };
+    baixarArquivo(`backup-tt-${obterDataLocalIso()}.json`, JSON.stringify(backup, null, 2), 'application/json;charset=utf-8');
+    await setDoc(doc(db, 'configuracoes', 'backup'), {
+      ultimoBackupEm: serverTimestamp(),
+      ultimoBackupPorUid: currentUserData.uid,
+      ultimoBackupPorNome: currentUserData.nome || currentUserData.email
+    }, { merge: true });
+    await registrarAuditoria('backup_exportado', 'seguranca', { colecoes: COLECOES_BACKUP.length });
+    Toast.fire({ icon: 'success', title: 'Backup baixado com sucesso.' });
+  } catch (error) {
+    Swal.fire({ icon: 'error', title: 'Não foi possível gerar o backup', text: error.message, confirmButtonColor: '#0F172A' });
+  } finally {
+    backupDownload.disabled = false;
+    atualizarConteudoBotao(backupDownload, 'Baixar backup', 'backup');
+  }
+}
+
+async function restaurarBackupAdmin(arquivo) {
+  if (currentUserData?.role !== 'admin' || !arquivo) return;
+  try {
+    const backup = JSON.parse(await arquivo.text());
+    if (backup.formato !== 'tt-transportes-backup' || !backup.colecoes) throw new Error('Este arquivo não é um backup válido do portal.');
+    const confirmacao = await Swal.fire({
+      icon: 'warning',
+      title: 'Restaurar este backup?',
+      html: '<p>Os registros do arquivo serão mesclados com os dados atuais.</p><p><strong>Nenhum dado atual será apagado.</strong></p>',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, restaurar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#B45309',
+      cancelButtonColor: '#64748B'
+    });
+    if (!confirmacao.isConfirmed) return;
+
+    backupRestoreSelect.disabled = true;
+    atualizarConteudoBotao(backupRestoreSelect, 'Restaurando...', 'file');
+    let restaurados = 0;
+    let ignorados = 0;
+    for (const [nomeColecao, documentos] of Object.entries(backup.colecoes)) {
+      if (!COLECOES_BACKUP.includes(nomeColecao) || !documentos || typeof documentos !== 'object') continue;
+      for (const [documentoId, dados] of Object.entries(documentos)) {
+        const referencia = doc(db, nomeColecao, documentoId);
+        if (['auditoria', 'movimentacoes_epi'].includes(nomeColecao)) {
+          const existente = await getDoc(referencia);
+          if (existente.exists()) {
+            ignorados += 1;
+            continue;
+          }
+        }
+        await setDoc(referencia, restaurarValorBackup(dados), { merge: true });
+        restaurados += 1;
+      }
+    }
+    await registrarAuditoria('backup_restaurado', 'seguranca', { restaurados, ignorados, criadoEmOriginal: backup.criadoEm || '' });
+    Swal.fire({ icon: 'success', title: 'Backup restaurado', text: `${restaurados} registro(s) restaurado(s). ${ignorados} registro(s) históricos já existentes foram preservados.`, confirmButtonColor: '#15803D' });
+  } catch (error) {
+    Swal.fire({ icon: 'error', title: 'Não foi possível restaurar', text: error.message, confirmButtonColor: '#0F172A' });
+  } finally {
+    backupRestoreSelect.disabled = false;
+    atualizarConteudoBotao(backupRestoreSelect, 'Selecionar backup', 'file');
+    if (backupFile) backupFile.value = '';
+  }
+}
+
+if (reportRefresh) reportRefresh.addEventListener('click', carregarRelatoriosAdmin);
+if (reportMonth) reportMonth.addEventListener('change', carregarRelatoriosAdmin);
+if (reportUser) reportUser.addEventListener('change', carregarRelatoriosAdmin);
+if (reportExportExcel) reportExportExcel.addEventListener('click', exportarRelatorioCsv);
+if (reportExportPdf) reportExportPdf.addEventListener('click', gerarRelatorioPdf);
+if (epiExportRestock) epiExportRestock.addEventListener('click', exportarListaReposicaoEpi);
+if (backupDownload) backupDownload.addEventListener('click', gerarBackupAdmin);
+if (backupRestoreSelect) backupRestoreSelect.addEventListener('click', () => backupFile?.click());
+if (backupFile) backupFile.addEventListener('change', () => restaurarBackupAdmin(backupFile.files?.[0]));

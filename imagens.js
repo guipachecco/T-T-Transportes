@@ -1,6 +1,6 @@
 const IMGBB_API_KEY = "fea0d5a6e89bea697d1fb6c08b030690";
 
-export function comprimirImagem(file, maxWidth = 1000, quality = 0.7) {
+export function comprimirImagem(file, maxDimension = 1000, quality = 0.7) {
   return new Promise((resolve) => {
     if (!file || !file.type || !file.type.startsWith('image/')) return resolve(file);
 
@@ -16,10 +16,9 @@ export function comprimirImagem(file, maxWidth = 1000, quality = 0.7) {
           let width = img.width;
           let height = img.height;
 
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
+          const escala = Math.min(1, maxDimension / width, maxDimension / height);
+          width = Math.max(1, Math.round(width * escala));
+          height = Math.max(1, Math.round(height * escala));
 
           canvas.width = width;
           canvas.height = height;
@@ -54,10 +53,18 @@ export async function fazerUploadImagem(file) {
     const formData = new FormData();
     formData.append("image", fotoOtimizada);
 
-    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-      method: "POST",
-      body: formData
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    let response;
+    try {
+      response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const data = await response.json();
 
@@ -76,12 +83,17 @@ export async function fazerUploadImagem(file) {
 export async function fazerUploadImagens(files) {
   if (!files || files.length === 0) return [];
   const listaArquivos = Array.from(files).slice(0, 10);
-  
-  const resultados = await Promise.allSettled(
-    listaArquivos.map(file => fazerUploadImagem(file))
-  );
+  const resultados = new Array(listaArquivos.length);
+  let proximoIndice = 0;
 
-  return resultados
-    .filter(res => res.status === 'fulfilled' && res.value !== null)
-    .map(res => res.value);
+  async function enviarProximo() {
+    while (proximoIndice < listaArquivos.length) {
+      const indice = proximoIndice++;
+      resultados[indice] = await fazerUploadImagem(listaArquivos[indice]);
+    }
+  }
+
+  const totalSimultaneo = Math.min(3, listaArquivos.length);
+  await Promise.all(Array.from({ length: totalSimultaneo }, () => enviarProximo()));
+  return resultados.filter(Boolean);
 }
