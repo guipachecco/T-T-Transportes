@@ -2390,18 +2390,6 @@ body {
   font-size: 0.67rem;
 }
 
-.today-meal-row {
-  margin: 0;
-  padding: 0;
-  border-bottom: 1px solid #E2E8F0;
-  list-style: none;
-}
-
-.today-meal-row .monthly-meal-row {
-  padding-right: 0;
-  padding-left: 0;
-}
-
 .btn-refeicao-desconsiderada,
 .btn-refeicao-desconsiderada:disabled {
   border: 1px solid #FECACA;

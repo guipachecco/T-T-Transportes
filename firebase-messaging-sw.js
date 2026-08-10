@@ -1,5 +1,5 @@
 // firebase-messaging-sw.js
-const CACHE_APLICATIVO = 'tt-portal-v20260810-4';
+const CACHE_APLICATIVO = 'tt-portal-v20260810-5';
 const ARQUIVOS_APLICATIVO = [
   '/',
   '/index.html',

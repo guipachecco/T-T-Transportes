@@ -107,8 +107,6 @@ const manutencoesList = document.getElementById("manutencoes-list");
 const totalManutencoesElement = document.getElementById("total-manutencoes");
 const marketplaceList = document.getElementById("marketplace-list");
 
-const lunchList = document.getElementById("lunch-list");
-const totalLunchesElement = document.getElementById("total-lunches");
 const totalAlmoco = document.getElementById("total-almoco");
 const totalJanta = document.getElementById("total-janta");
 const personalMealKpis = document.getElementById("personal-meal-kpis");
@@ -4324,35 +4322,12 @@ function renderizarPainelMensalRefeicoes() {
 
 function renderizarRefeicoesHoje() {
   const hoje = obterDataLocalIso();
-  const refeicoes = combinarRefeicoes([hoje], reservasHojeCache, excecoesHojeCache)
-    .sort((a, b) =>
-      a.colaboradorNome.localeCompare(b.colaboradorNome, 'pt-BR') || a.tipo.localeCompare(b.tipo)
-    );
+  const refeicoes = combinarRefeicoes([hoje], reservasHojeCache, excecoesHojeCache);
   const almocos = refeicoes.filter((item) => item.tipo === 'almoco').length;
   const jantas = refeicoes.filter((item) => item.tipo === 'janta').length;
-  const total = almocos + jantas;
 
   if (totalAlmoco) totalAlmoco.textContent = almocos;
   if (totalJanta) totalJanta.textContent = jantas;
-  if (totalLunchesElement) totalLunchesElement.textContent = `${total} refeição(ões) para hoje`;
-
-  if (!lunchList) return;
-  lunchList.replaceChildren();
-
-  if (refeicoes.length === 0) {
-    const vazio = document.createElement('li');
-    vazio.className = 'meal-admin-empty';
-    vazio.textContent = 'Nenhuma refeição para hoje.';
-    lunchList.appendChild(vazio);
-    return;
-  }
-
-  refeicoes.forEach((item) => {
-    const li = document.createElement('li');
-    li.className = 'today-meal-row';
-    li.appendChild(criarLinhaRefeicaoAdmin(item));
-    lunchList.appendChild(li);
-  });
 }
 
 async function desconsiderarRefeicao(item) {
