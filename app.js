@@ -3935,6 +3935,7 @@ if (menuForm) {
 
     const pratoPrincipal = document.getElementById("menu-main").value;
     const acompanhamento = document.getElementById("menu-side").value;
+    const arrozFeijao = document.getElementById("menu-rice-beans").value;
     const saladaInput = document.getElementById("menu-salad");
     const salada = saladaInput ? saladaInput.value : "";
     const sobremesa = document.getElementById("menu-dessert").value;
@@ -3943,6 +3944,7 @@ if (menuForm) {
       await setDoc(doc(db, "cardapio", dataCardapio), {
         pratoPrincipal,
         acompanhamento,
+        arrozFeijao,
         salada,
         sobremesa,
         atualizadoEm: serverTimestamp()
@@ -3974,14 +3976,18 @@ async function buscarCardapioPorData(dataStr) {
       const cardapio = docSnap.data();
       const partesData = dataStr.split("-");
       const dataFormatada = `${partesData[2]}/${partesData[1]}/${partesData[0]}`;
+      const linhaArrozFeijao = cardapio.arrozFeijao
+        ? `<p style="margin: 4px 0;"><strong>Arroz e feijão:</strong> ${escaparHtml(cardapio.arrozFeijao)}</p>`
+        : '';
 
       dailyMenuDisplay.innerHTML = `
         <div class="notice-card" style="margin-top: 12px; padding: 16px;">
           <h4 style="margin-bottom: 8px; color: #0F172A;">Cardápio de ${dataFormatada}</h4>
-          <p style="margin: 4px 0;"><strong>Prato Principal:</strong> ${cardapio.pratoPrincipal}</p>
-          <p style="margin: 4px 0;"><strong>Acompanhamento:</strong> ${cardapio.acompanhamento}</p>
-          <p style="margin: 4px 0;"><strong>Salada:</strong> ${cardapio.salada || 'Não informada'}</p>
-          <p style="margin: 4px 0;"><strong>Sobremesa:</strong> ${cardapio.sobremesa || 'Não informada'}</p>
+          <p style="margin: 4px 0;"><strong>Prato Principal:</strong> ${escaparHtml(cardapio.pratoPrincipal)}</p>
+          <p style="margin: 4px 0;"><strong>Acompanhamento:</strong> ${escaparHtml(cardapio.acompanhamento)}</p>
+          ${linhaArrozFeijao}
+          <p style="margin: 4px 0;"><strong>Salada:</strong> ${escaparHtml(cardapio.salada || 'Não informada')}</p>
+          <p style="margin: 4px 0;"><strong>Sobremesa:</strong> ${escaparHtml(cardapio.sobremesa || 'Não informada')}</p>
           <div class="meal-reservation-actions" style="margin-top: 12px;">
             ${criarBotaoReservaHtml(dataStr, 'almoco')}
             ${criarBotaoReservaHtml(dataStr, 'janta')}
@@ -4033,12 +4039,16 @@ function renderizarCardapiosSemanais() {
       const card = document.createElement("div");
       card.className = "card-kpi";
       card.style.cssText = "text-align: left; background: #ffffff; border-radius: 8px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;";
+      const linhaArrozFeijao = cardapio.arrozFeijao
+        ? `<p style="font-size: 0.85rem; color: #475569; margin: 2px 0;"><strong>Arroz e feijão:</strong> ${escaparHtml(cardapio.arrozFeijao)}</p>`
+        : '';
       card.innerHTML = `
         <span class="kpi-label" style="font-weight: 600; color: #0284C7; font-size: 0.85rem;">📅 ${dataFormatada}</span>
-        <h4 style="margin: 6px 0; font-size: 1rem; color: #0F172A; font-weight: 600;">${cardapio.pratoPrincipal}</h4>
-        <p style="font-size: 0.85rem; color: #475569; margin: 2px 0;"><strong>Acompanhamento:</strong> ${cardapio.acompanhamento}</p>
-        <p style="font-size: 0.85rem; color: #475569; margin: 2px 0;"><strong>Salada:</strong> ${cardapio.salada || 'Não informada'}</p>
-        ${cardapio.sobremesa ? `<small style="color: #0284C7; display: block; margin-top: 4px;"><strong>Sobremesa:</strong> ${cardapio.sobremesa}</small>` : ''}
+        <h4 style="margin: 6px 0; font-size: 1rem; color: #0F172A; font-weight: 600;">${escaparHtml(cardapio.pratoPrincipal)}</h4>
+        <p style="font-size: 0.85rem; color: #475569; margin: 2px 0;"><strong>Acompanhamento:</strong> ${escaparHtml(cardapio.acompanhamento)}</p>
+        ${linhaArrozFeijao}
+        <p style="font-size: 0.85rem; color: #475569; margin: 2px 0;"><strong>Salada:</strong> ${escaparHtml(cardapio.salada || 'Não informada')}</p>
+        ${cardapio.sobremesa ? `<small style="color: #0284C7; display: block; margin-top: 4px;"><strong>Sobremesa:</strong> ${escaparHtml(cardapio.sobremesa)}</small>` : ''}
         
         <div class="meal-reservation-actions" style="margin-top: 10px;">
           ${criarBotaoReservaHtml(dataStr, 'almoco')}
