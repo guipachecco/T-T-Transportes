@@ -93,37 +93,6 @@ service cloud.firestore {
       allow write: if ehAdmin();
     }
 
-    match /manutencoes/{manutencaoId} {
-      allow read, create: if estaAutenticado();
-      allow update, delete: if ehAdmin();
-    }
-
-    // Acidentes e ocorrências: o colaborador registra e consulta os próprios
-    // relatos; o administrador acompanha e atualiza o andamento.
-    match /ocorrencias/{ocorrenciaId} {
-      allow read: if ehAdmin() || (
-        estaAutenticado() &&
-        resource.data.colaboradorUid == request.auth.uid
-      );
-
-      allow create: if estaAutenticado() &&
-        request.resource.data.colaboradorUid == request.auth.uid &&
-        request.resource.data.status == 'Aberta' &&
-        request.resource.data.tipo is string &&
-        request.resource.data.data is string &&
-        request.resource.data.hora is string &&
-        request.resource.data.motorista is string &&
-        request.resource.data.veiculo is string &&
-        request.resource.data.placa is string &&
-        request.resource.data.localizacao is string &&
-        request.resource.data.descricao is string &&
-        request.resource.data.providencias is string &&
-        request.resource.data.fotos is list &&
-        request.resource.data.fotos.size() <= 10;
-
-      allow update, delete: if ehAdmin();
-    }
-
     // Listas definitivas geradas nos horários de corte das refeições.
     match /fechamentos_refeicoes/{fechamentoId} {
       allow read: if ehAdmin();

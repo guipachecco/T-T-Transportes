@@ -1,6 +1,6 @@
 import { getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { db, messaging } from "./firebase-init.js";
+import { db, messaging } from "./firebase-init.js?v=20260811-3";
 
 const VAPID_KEY = "BK_3vIOXAN9QsojUOvGwmFsouoL0igFXPYnPAZaJUJjhLPk5O-829e_qj2q-p5BBZuQYMcTIllcmw4rtSjsaP2A";
 

@@ -30,9 +30,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Módulos Locais
-import { auth, db, appCheckConfigured } from "./firebase-init.js";
-import { solicitarPermissaoNotificacoes, exibirNotificacaoLocal } from "./notificacoes.js";
-import { fazerUploadImagens } from "./imagens.js";
+import { auth, db, appCheckConfigured } from "./firebase-init.js?v=20260811-3";
+import { solicitarPermissaoNotificacoes, exibirNotificacaoLocal } from "./notificacoes.js?v=20260811-3";
+import { fazerUploadImagens } from "./imagens.js?v=20260811-3";
 
 // Constantes Globais
 const PRECO_REFEICAO = 4.00;
@@ -103,8 +103,6 @@ const noticeImageInput = document.getElementById("notice-image");
 const noticeImagePreviewWrapper = document.getElementById("notice-image-preview-wrapper");
 const noticeImagePreview = document.getElementById("notice-image-preview");
 const btnRemoveNoticeImage = document.getElementById("btn-remove-notice-image");
-const manutencoesList = document.getElementById("manutencoes-list");
-const totalManutencoesElement = document.getElementById("total-manutencoes");
 const marketplaceList = document.getElementById("marketplace-list");
 
 const totalAlmoco = document.getElementById("total-almoco");
@@ -171,13 +169,9 @@ const reportsLoading = document.getElementById("reports-loading");
 const reportMealsTotal = document.getElementById("report-meals-total");
 const reportMealsValue = document.getElementById("report-meals-value");
 const reportEpiDeliveries = document.getElementById("report-epi-deliveries");
-const reportMaintenanceTotal = document.getElementById("report-maintenance-total");
-const reportOccurrenceTotal = document.getElementById("report-occurrence-total");
 const reportStockMovements = document.getElementById("report-stock-movements");
 const reportMealsBody = document.getElementById("report-meals-body");
 const reportEpiList = document.getElementById("report-epi-list");
-const reportMaintenanceList = document.getElementById("report-maintenance-list");
-const reportOccurrenceList = document.getElementById("report-occurrence-list");
 const reportStockBody = document.getElementById("report-stock-body");
 const appCheckStatus = document.getElementById("app-check-status");
 const backupDownload = document.getElementById("backup-download");
@@ -186,27 +180,6 @@ const backupRestoreSelect = document.getElementById("backup-restore-select");
 const backupStatus = document.getElementById("backup-status");
 const auditList = document.getElementById("audit-list");
 const adminMealCloseMenuButton = document.getElementById("admin-meal-close-menu-button");
-
-const occurrenceForm = document.getElementById("occurrence-form");
-const occurrenceType = document.getElementById("occurrence-type");
-const occurrenceDate = document.getElementById("occurrence-date");
-const occurrenceTime = document.getElementById("occurrence-time");
-const occurrenceDriver = document.getElementById("occurrence-driver");
-const occurrenceVehicle = document.getElementById("occurrence-vehicle");
-const occurrencePlate = document.getElementById("occurrence-plate");
-const occurrenceLocation = document.getElementById("occurrence-location");
-const occurrenceLocationButton = document.getElementById("occurrence-location-button");
-const occurrenceLocationStatus = document.getElementById("occurrence-location-status");
-const occurrenceLatitude = document.getElementById("occurrence-latitude");
-const occurrenceLongitude = document.getElementById("occurrence-longitude");
-const occurrenceInvolved = document.getElementById("occurrence-involved");
-const occurrenceDescription = document.getElementById("occurrence-description");
-const occurrenceActions = document.getElementById("occurrence-actions");
-const occurrencePhotos = document.getElementById("occurrence-photos");
-const occurrenceSubmit = document.getElementById("occurrence-submit");
-const occurrenceList = document.getElementById("occurrence-list");
-const occurrenceListTitle = document.getElementById("occurrence-list-title");
-const occurrenceStatusFilter = document.getElementById("occurrence-status-filter");
 
 const mealCloseDate = document.getElementById("meal-close-date");
 const mealCloseRefresh = document.getElementById("meal-close-refresh");
@@ -255,13 +228,9 @@ let afastamentosAdminCache = [];
 let canceladoresRelatorios = [];
 let auditoriaAdminCache = [];
 let relatorioAdminCache = null;
-let ocorrenciasCache = [];
-let cancelarOuvinteOcorrencias = null;
-let limparPreviewOcorrencias = () => {};
 let timerFechamentoRefeicoes = null;
 let fechamentosExibidos = { almoco: null, janta: null };
 let cancelarOuvinteAvisos = null;
-let cancelarOuvinteManutencoes = null;
 let cancelarOuvinteMarketplace = null;
 let cancelarOuvinteCardapio = null;
 let modulosSecaoIniciados = new Set();
@@ -275,7 +244,7 @@ const Toast = Swal.mixin({
   timerProgressBar: true
 });
 
-const ICONES_INTERFACE = new Set(['notice', 'store', 'maintenance', 'alert', 'meal', 'shirt', 'chart', 'download', 'logout', 'calendar', 'eye', 'check', 'clock', 'camera', 'history', 'refresh', 'print', 'file', 'backup', 'location', 'close']);
+const ICONES_INTERFACE = new Set(['notice', 'store', 'meal', 'shirt', 'chart', 'download', 'logout', 'calendar', 'eye', 'check', 'camera', 'refresh', 'print', 'file', 'backup', 'close']);
 
 function obterIconeInterface(nome, classe = 'ui-icon') {
   const icone = ICONES_INTERFACE.has(nome) ? nome : 'notice';
@@ -293,10 +262,9 @@ function iniciarModuloDaSecao(secaoId) {
   if (secaoId === 'marketplace') ouvirMarketplace();
   if (secaoId === 'refeicoes') ouvirCardapioSemanal();
   if (secaoId === 'equipamentos') iniciarModuloEpi();
-  if (secaoId === 'ocorrencias') iniciarModuloOcorrencias();
   if (secaoId === 'relatorios' && currentUserData.role === 'admin') iniciarOuvintesRelatorios();
 
-  if (['marketplace', 'refeicoes', 'equipamentos', 'ocorrencias', 'relatorios'].includes(secaoId)) {
+  if (['marketplace', 'refeicoes', 'equipamentos', 'relatorios'].includes(secaoId)) {
     modulosSecaoIniciados.add(secaoId);
   }
 }
@@ -405,7 +373,7 @@ function acessarDashboard(user) {
   solicitarPermissaoNotificacoes(user).finally(agendarLembreteAlmoco);
 
   const secaoSolicitada = new URLSearchParams(window.location.search).get('secao');
-  const secoesPermitidas = ['mural', 'marketplace', 'refeicoes', 'equipamentos', 'ocorrencias'];
+  const secoesPermitidas = ['mural', 'marketplace', 'refeicoes', 'equipamentos'];
   if (currentUserData?.role === 'admin') secoesPermitidas.push('relatorios', 'fechamentos');
   if (secoesPermitidas.includes(secaoSolicitada)) {
     window.mostrarSecao(secaoSolicitada);
@@ -465,7 +433,6 @@ onAuthStateChanged(auth, async (user) => {
     encerrarOuvintesRefeicoesUsuario();
     encerrarOuvintesRefeicoesAdmin();
     encerrarOuvintesRelatorios();
-    encerrarOuvinteOcorrencias();
     encerrarFechamentoAutomaticoRefeicoes();
     currentUserData = null;
     currentUserDocRef = null;
@@ -631,7 +598,6 @@ if (btnLogoutSidebar) {
 // -------------------------------------------------------------
 function iniciarOuvintesTempoReal() {
   ouvirAvisos();
-  ouvirManutencoes();
   ouvirReservasDoUsuario();
   ouvirRefeicoesDoMes();
   iniciarModuloEpi();
@@ -647,11 +613,10 @@ function iniciarOuvintesTempoReal() {
 }
 
 function encerrarOuvintesConteudo() {
-  [cancelarOuvinteAvisos, cancelarOuvinteManutencoes, cancelarOuvinteMarketplace, cancelarOuvinteCardapio]
+  [cancelarOuvinteAvisos, cancelarOuvinteMarketplace, cancelarOuvinteCardapio]
     .filter((cancelar) => typeof cancelar === 'function')
     .forEach((cancelar) => cancelar());
   cancelarOuvinteAvisos = null;
-  cancelarOuvinteManutencoes = null;
   cancelarOuvinteMarketplace = null;
   cancelarOuvinteCardapio = null;
   modulosSecaoIniciados.clear();
@@ -931,41 +896,8 @@ window.confirmarLeituraAviso = async (anuncioId) => {
 window.confirmarLeitura = window.confirmarLeituraAviso;
 
 // =============================================================
-// GESTÃO DE MANUTENÇÃO / SOS
+// SELETOR DE FOTOS COMPARTILHADO
 // =============================================================
-
-async function compartilharMensagemNoGrupo(mensagem) {
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Chamado de manutenção - T&T Transportes',
-        text: mensagem
-      });
-      return true;
-    } catch (error) {
-      if (error?.name === 'AbortError') return false;
-      console.warn('Compartilhamento nativo indisponível:', error);
-    }
-  }
-
-  const urlCompartilhamento = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`;
-  const janela = window.open(urlCompartilhamento, '_blank', 'noopener');
-  if (janela) return true;
-
-  try {
-    await navigator.clipboard.writeText(mensagem);
-    await Swal.fire({
-      icon: 'info',
-      title: 'Mensagem copiada',
-      text: 'Abra o grupo da manutenção no WhatsApp e cole a mensagem.',
-      confirmButtonColor: '#25D366'
-    });
-    return true;
-  } catch (error) {
-    Swal.fire({ icon: 'warning', title: 'Copie a mensagem manualmente', text: mensagem, confirmButtonColor: '#0F172A' });
-    return false;
-  }
-}
 
 function configurarSeletorFotos({ inputId, previewId, countId, limite = 10 }) {
   const input = document.getElementById(inputId);
@@ -1019,620 +951,6 @@ function configurarSeletorFotos({ inputId, previewId, countId, limite = 10 }) {
     limparUrls();
   };
 }
-
-// Função para abrir o modal de reporte de manutenção/SOS (Exposta no window)
-window.abrirReporteManutencao = () => {
-  // Fecha a barra lateral ao abrir o formulário
-  if (typeof window.fecharMenuSidebar === "function") {
-    window.fecharMenuSidebar();
-  }
-
-  let limparPreviewManutencao = () => {};
-
-  Swal.fire({
-    html: `
-      <div class="form-modal">
-        <header class="form-modal-header">
-          <span class="form-modal-icon form-modal-icon-maintenance" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.7 6.3a4 4 0 0 0-5-5L7.2 3.8l3 3L7 10 4 7l-2.5 2.5a4 4 0 0 0 5 5L14 7"/>
-              <path d="m13 11 8 8-2 2-8-8"/>
-            </svg>
-          </span>
-          <div class="form-modal-heading">
-            <h2>Reportar manutenção / SOS</h2>
-            <p>Registre o problema do veículo para atendimento da equipe responsável.</p>
-          </div>
-        </header>
-
-        <div class="form-modal-body">
-          <div class="form-modal-row form-modal-row-vehicle">
-            <div class="form-modal-field form-modal-field-wide">
-              <label class="form-modal-label" for="swal-veiculo">Veículo / frota <span>*</span></label>
-              <input id="swal-veiculo" class="form-modal-control" placeholder="Ex.: Caminhão Volvo FH 540" autocomplete="off">
-            </div>
-            <div class="form-modal-field form-modal-field-plate">
-              <label class="form-modal-label" for="swal-placa">Placa <span>*</span></label>
-              <input id="swal-placa" class="form-modal-control form-modal-uppercase" placeholder="ABC-1D23" autocomplete="off">
-            </div>
-          </div>
-
-          <div class="form-modal-row">
-            <div class="form-modal-field">
-              <label class="form-modal-label" for="swal-tipo">Tipo de problema <span>*</span></label>
-              <select id="swal-tipo" class="form-modal-control">
-                <option value="Mecânica">Mecânica</option>
-                <option value="Elétrica">Elétrica</option>
-                <option value="Pneus">Pneus</option>
-                <option value="Funilaria / Pintura">Funilaria / Pintura</option>
-                <option value="Outros / Emergência SOS">Outros / Emergência SOS</option>
-              </select>
-            </div>
-            <div class="form-modal-field">
-              <label class="form-modal-label" for="swal-prioridade">Prioridade <span>*</span></label>
-              <select id="swal-prioridade" class="form-modal-control">
-                <option value="Baixa">Baixa</option>
-                <option value="Média" selected>Média</option>
-                <option value="Alta">Alta (urgente / SOS)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-modal-field">
-            <label class="form-modal-label" for="swal-descricao">Descrição do problema <span>*</span></label>
-            <textarea id="swal-descricao" class="form-modal-control form-modal-textarea" placeholder="Descreva o que está acontecendo e informe onde o veículo está."></textarea>
-          </div>
-
-          <div class="form-modal-photo-section">
-            <div class="form-modal-photo-copy">
-              <span class="form-modal-label">Fotos do problema <small>Opcional</small></span>
-              <p>Adicione imagens que ajudem a identificar o defeito.</p>
-            </div>
-            <div class="photo-picker">
-              <input type="file" id="swal-fotos" multiple accept="image/*" class="photo-picker-input">
-              <label for="swal-fotos" class="photo-picker-button photo-picker-button-danger">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3 7.2 5H4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3h-3.2L15 3H9Zm3 15.2A5.2 5.2 0 1 1 12 7.8a5.2 5.2 0 0 1 0 10.4Zm0-2A3.2 3.2 0 1 0 12 9.8a3.2 3.2 0 0 0 0 6.4Z"/></svg>
-                <span>Selecionar fotos</span>
-              </label>
-              <span id="swal-fotos-count" class="photo-picker-count">Nenhuma foto selecionada</span>
-              <div id="swal-fotos-preview" class="photo-preview-grid" aria-live="polite"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `,
-    width: 640,
-    padding: 0,
-    showCloseButton: true,
-    showCancelButton: true,
-    confirmButtonText: 'Enviar Chamado',
-    cancelButtonText: 'Cancelar',
-    buttonsStyling: false,
-    customClass: {
-      popup: 'form-modal-popup form-modal-popup-maintenance',
-      htmlContainer: 'form-modal-html',
-      actions: 'form-modal-actions',
-      confirmButton: 'form-modal-submit form-modal-submit-maintenance',
-      cancelButton: 'form-modal-cancel',
-      validationMessage: 'form-modal-validation'
-    },
-    focusConfirm: false,
-    didOpen: () => {
-      limparPreviewManutencao = configurarSeletorFotos({
-        inputId: 'swal-fotos',
-        previewId: 'swal-fotos-preview',
-        countId: 'swal-fotos-count',
-        limite: 10
-      });
-    },
-    willClose: () => limparPreviewManutencao(),
-    preConfirm: () => {
-      const veiculo = document.getElementById('swal-veiculo').value.trim();
-      const placa = document.getElementById('swal-placa').value.trim();
-      const tipo = document.getElementById('swal-tipo').value;
-      const prioridade = document.getElementById('swal-prioridade').value;
-      const descricao = document.getElementById('swal-descricao').value.trim();
-      const fotosInput = document.getElementById('swal-fotos');
-
-      if (!veiculo || !placa || !descricao) {
-        Swal.showValidationMessage('Por favor, preencha Veículo, Placa e Descrição.');
-        return false;
-      }
-
-      if (fotosInput && fotosInput.files.length > 10) {
-        Swal.showValidationMessage('Você pode selecionar no máximo 10 fotos.');
-        return false;
-      }
-
-      return { 
-        veiculo, 
-        placa, 
-        tipo, 
-        prioridade, 
-        descricao, 
-        files: fotosInput ? Array.from(fotosInput.files) : []
-      };
-    }
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      const { veiculo, placa, tipo, prioridade, descricao, files } = result.value;
-
-      Swal.fire({
-        title: 'Enviando chamado...',
-        text: 'Otimizando imagens e salvando dados.',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      try {
-        let fotosUrls = [];
-        if (files && files.length > 0) {
-          fotosUrls = await fazerUploadImagens(files);
-        }
-
-        const agora = new Date();
-        const dataFormatada = agora.toLocaleDateString('pt-BR');
-        const horaFormatada = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-        // 1. Salva no Firestore
-        await addDoc(collection(db, "manutencoes"), {
-          veiculo,
-          placa,
-          tipo,
-          prioridade,
-          descricao,
-          fotos: fotosUrls,
-          status: "Pendente",
-          colaboradorUid: currentUserData?.uid || "",
-          colaboradorNome: currentUserData?.nome || currentUserData?.email || "Colaborador",
-          criadoEm: serverTimestamp(),
-          dataTexto: `${dataFormatada} às ${horaFormatada}`
-        });
-
-        // 2. Formata mensagem para o WhatsApp
-        let mensagemWhats = `*NOVO CHAMADO DE MANUTENÇÃO*\n\n`;
-        mensagemWhats += `*Solicitante:* ${currentUserData?.nome || currentUserData?.email || 'Colaborador'}\n`;
-        mensagemWhats += `*Veículo:* ${veiculo} (Placa: ${placa})\n`;
-        mensagemWhats += `*Tipo:* ${tipo}\n`;
-        mensagemWhats += `*Prioridade:* ${prioridade}\n`;
-        mensagemWhats += `*Data/Hora:* ${dataFormatada} às ${horaFormatada}\n\n`;
-        mensagemWhats += `*Descrição:* ${descricao}\n`;
-
-        if (fotosUrls.length > 0) {
-          mensagemWhats += `\n*Fotos do problema:*\n` + fotosUrls.join('\n');
-        }
-
-        const confirmacaoCompartilhamento = await Swal.fire({
-          icon: 'success',
-          title: 'Manutenção Registrada!',
-          text: 'O chamado foi salvo. Compartilhe a mensagem e escolha o grupo de manutenção no WhatsApp.',
-          confirmButtonText: 'Compartilhar no grupo',
-          showCancelButton: true,
-          cancelButtonText: 'Agora não',
-          confirmButtonColor: '#25D366'
-        });
-
-        if (confirmacaoCompartilhamento.isConfirmed) {
-          await compartilharMensagemNoGrupo(mensagemWhats);
-        }
-
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Erro ao enviar chamado',
-          text: error.message,
-          confirmButtonColor: '#0284C7'
-        });
-      }
-    }
-  });
-};
-// -------------------------------------------------------------
-// LISTAGEM DE MANUTENÇÕES (PENDENTES NO PAINEL PRINCIPAL)
-// -------------------------------------------------------------
-function ouvirManutencoes() {
-  if (!manutencoesList) return;
-  if (cancelarOuvinteManutencoes) cancelarOuvinteManutencoes();
-
-  // Busca apenas pendentes direto do banco (requer o índice gerado no Firebase)
-  const q = query(
-    collection(db, "manutencoes"), 
-    where("status", "==", "Pendente"),
-    orderBy("criadoEm", "desc"),
-    limit(100)
-  );
-
-  cancelarOuvinteManutencoes = onSnapshot(q, (snapshot) => {
-    manutencoesList.innerHTML = "";
-
-    if (totalManutencoesElement) {
-      totalManutencoesElement.textContent = `${snapshot.size} chamada(s) pendente(s)`;
-    }
-
-    if (snapshot.empty) {
-      manutencoesList.innerHTML = `<p class="text-muted-small" style="grid-column: 1/-1; text-align: center; padding: 20px;">Nenhuma manutenção pendente no momento.</p>`;
-      return;
-    }
-
-    snapshot.forEach((docSnap) => {
-      const card = criarCardManutencao(docSnap.id, docSnap.data(), false);
-      manutencoesList.appendChild(card);
-    });
-  });
-}
-
-// Função auxiliar para criar os cards de manutenção
-function criarCardManutencao(id, item, eHistorico = false) {
-  const card = document.createElement("div");
-  card.className = "card-kpi";
-  card.style.textAlign = "left";
-
-  const dataHora = item.criadoEm?.toDate 
-    ? item.criadoEm.toDate().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-    : (item.dataTexto || 'Data não registrada');
-
-  const prioridadeCor = item.prioridade === 'Alta' ? '#EF4444' : item.prioridade === 'Média' ? '#F59E0B' : '#10B981';
-
-  let fotosHtml = '';
-  if (item.fotos && item.fotos.length > 0) {
-    fotosHtml = `
-      <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-        ${item.fotos.map(url => `<a href="${url}" target="_blank"><img src="${url}" loading="lazy" decoding="async" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;"></a>`).join('')}
-      </div>
-    `;
-  }
-
-  card.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-      <span class="kpi-label inline-icon-label" style="font-weight: 600; color: #64748B;">${obterIconeInterface('clock')}<span>${dataHora}</span></span>
-      <span style="background: ${prioridadeCor}; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${item.prioridade}</span>
-    </div>
-    <h4 style="margin: 6px 0; color: #0F172A;">${item.veiculo} - <span style="color: #0284C7;">${item.placa}</span></h4>
-    <p style="font-size: 0.85rem; color: #334155; margin: 4px 0;"><strong>Tipo:</strong> ${item.tipo}</p>
-    <p style="font-size: 0.85rem; color: #475569; margin: 4px 0;"><strong>Solicitante:</strong> ${item.colaboradorNome || 'Não informado'}</p>
-    <p style="font-size: 0.85rem; color: #475569; margin: 6px 0;">${item.descricao}</p>
-    ${fotosHtml}
-
-    ${!eHistorico ? `
-      <div style="margin-top: 12px; display: flex; gap: 8px;">
-        <button onclick="marcarManutencaoConcluida('${id}')" class="btn button-with-icon" style="background: #10B981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; flex: 1;">
-          ${obterIconeInterface('check')}<span>Marcar como Concluído</span>
-        </button>
-      </div>
-    ` : `
-      <div class="inline-icon-label" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2E8F0; color: #10B981; font-weight: 600; font-size: 0.85rem;">
-        ${obterIconeInterface('check')}<span>Concluído</span>
-      </div>
-    `}
-  `;
-
-  return card;
-}
-
-// -------------------------------------------------------------
-// HISTÓRICO DE MANUTENÇÕES CONCLUÍDAS
-// -------------------------------------------------------------
-window.abrirHistoricoManutencoes = async () => {
-  const modal = document.getElementById("modal-historico-manutencao");
-  const listaHistorico = document.getElementById("historico-manutencoes-list");
-  if (!modal || !listaHistorico) return;
-
-  modal.style.display = "flex";
-  listaHistorico.innerHTML = "<p style='text-align: center; color: #64748B;'>Carregando histórico...</p>";
-
-  try {
-    const q = query(collection(db, "manutencoes"), where("status", "==", "Concluído"), orderBy("criadoEm", "desc"));
-    const snapshot = await getDocs(q);
-
-    listaHistorico.innerHTML = "";
-
-    if (snapshot.empty) {
-      listaHistorico.innerHTML = "<p style='text-align: center; color: #64748B; padding: 20px;'>Nenhuma manutenção concluída até o momento.</p>";
-      return;
-    }
-
-    snapshot.forEach((docSnap) => {
-      const item = docSnap.data();
-      const id = docSnap.id;
-      const card = criarCardManutencao(id, item, true);
-      listaHistorico.appendChild(card);
-    });
-
-  } catch (error) {
-    listaHistorico.innerHTML = `<p style='color: #EF4444; text-align: center;'>Erro ao carregar histórico: ${error.message}</p>`;
-  }
-};
-
-window.fecharHistoricoManutencoes = () => {
-  const modal = document.getElementById("modal-historico-manutencao");
-  if (modal) modal.style.display = "none";
-};
-
-// Concluir chamado de manutenção
-window.marcarManutencaoConcluida = async (id) => {
-  const confirm = await Swal.fire({
-    title: 'Concluir Manutenção?',
-    text: 'Esta manutenção será movida para o histórico de concluídos.',
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Sim, concluir',
-    cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#10B981'
-  });
-
-  if (!confirm.isConfirmed) return;
-
-  try {
-    await updateDoc(doc(db, "manutencoes", id), {
-      status: "Concluído",
-      concluidoEm: serverTimestamp(),
-      concluidoPorUid: currentUserData?.uid || '',
-      concluidoPorNome: currentUserData?.nome || currentUserData?.email || 'Administrador'
-    });
-    await registrarAuditoria('manutencao_concluida', 'manutencoes', { manutencaoId: id });
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Concluído!',
-      text: 'A manutenção foi movida para o histórico.',
-      timer: 1500,
-      showConfirmButton: false
-    });
-  } catch (error) {
-    Swal.fire({ icon: 'error', title: 'Erro', text: error.message });
-  }
-};
-
-// =============================================================
-// ACIDENTES E OCORRÊNCIAS
-// =============================================================
-function encerrarOuvinteOcorrencias() {
-  if (cancelarOuvinteOcorrencias) cancelarOuvinteOcorrencias();
-  cancelarOuvinteOcorrencias = null;
-  limparPreviewOcorrencias();
-  limparPreviewOcorrencias = () => {};
-}
-
-function obterHorarioAtualInput() {
-  const agora = new Date();
-  return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
-}
-
-function prepararFormularioOcorrencia() {
-  if (!occurrenceForm) return;
-  if (!occurrenceDate.value) occurrenceDate.value = obterDataLocalIso();
-  if (!occurrenceTime.value) occurrenceTime.value = obterHorarioAtualInput();
-  if (!occurrenceDriver.value) occurrenceDriver.value = currentUserData?.nome || currentUserData?.email || '';
-
-  limparPreviewOcorrencias();
-  limparPreviewOcorrencias = configurarSeletorFotos({
-    inputId: 'occurrence-photos',
-    previewId: 'occurrence-photos-preview',
-    countId: 'occurrence-photos-count',
-    limite: 10
-  });
-}
-
-function obterDataOcorrencia(item) {
-  if (item?.ocorridoEm?.toDate) return item.ocorridoEm.toDate();
-  if (item?.data && item?.hora) {
-    const data = new Date(`${item.data}T${item.hora}:00`);
-    if (!Number.isNaN(data.getTime())) return data;
-  }
-  if (item?.criadoEm?.toDate) return item.criadoEm.toDate();
-  return new Date(0);
-}
-
-function obterClasseStatusOcorrencia(status) {
-  if (status === 'Concluída') return 'done';
-  if (status === 'Em análise') return 'review';
-  return 'open';
-}
-
-function renderizarOcorrencias() {
-  if (!occurrenceList) return;
-  const filtro = occurrenceStatusFilter?.value || 'todos';
-  const registros = ocorrenciasCache
-    .filter((item) => filtro === 'todos' || item.status === filtro)
-    .sort((a, b) => obterDataOcorrencia(b) - obterDataOcorrencia(a));
-
-  occurrenceList.replaceChildren();
-  if (occurrenceListTitle) {
-    occurrenceListTitle.textContent = currentUserData?.role === 'admin' ? 'Ocorrências da empresa' : 'Minhas ocorrências';
-  }
-
-  if (registros.length === 0) {
-    const vazio = document.createElement('p');
-    vazio.className = 'occurrence-list-empty';
-    vazio.textContent = 'Nenhuma ocorrência encontrada neste filtro.';
-    occurrenceList.appendChild(vazio);
-    return;
-  }
-
-  registros.forEach((item) => {
-    const card = document.createElement('article');
-    card.className = 'occurrence-record';
-    const dataHora = obterDataOcorrencia(item).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-    const coordenadasValidas = Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude));
-    const linkMapa = coordenadasValidas
-      ? `<a href="https://www.google.com/maps?q=${encodeURIComponent(`${item.latitude},${item.longitude}`)}" target="_blank" rel="noopener">Abrir no mapa</a>`
-      : '';
-    const fotosHtml = Array.isArray(item.fotos) && item.fotos.length
-      ? `<div class="occurrence-record-photos">${item.fotos.map((url, indice) => `<a href="${escaparHtml(url)}" target="_blank" rel="noopener"><img src="${escaparHtml(url)}" alt="Foto ${indice + 1} da ocorrência" loading="lazy" decoding="async"></a>`).join('')}</div>`
-      : '';
-    const pendenteHtml = item.pendenteSincronizacao
-      ? '<span class="occurrence-type-tag">Aguardando sincronização</span>'
-      : '';
-    const acoesAdmin = currentUserData?.role === 'admin'
-      ? `
-          ${item.status !== 'Em análise' ? `<button type="button" class="occurrence-action-button" onclick="atualizarStatusOcorrencia('${item.id}', 'Em análise')">Marcar em análise</button>` : ''}
-          ${item.status !== 'Concluída' ? `<button type="button" class="occurrence-action-button" onclick="atualizarStatusOcorrencia('${item.id}', 'Concluída')">Concluir</button>` : ''}
-          ${item.status !== 'Aberta' ? `<button type="button" class="occurrence-action-button" onclick="atualizarStatusOcorrencia('${item.id}', 'Aberta')">Reabrir</button>` : ''}
-        `
-      : '';
-
-    card.innerHTML = `
-      <div>
-        <div class="occurrence-record-top">
-          <span class="occurrence-status ${obterClasseStatusOcorrencia(item.status)}">${escaparHtml(item.status || 'Aberta')}</span>
-          <span class="occurrence-type-tag">${escaparHtml(item.tipo || 'Ocorrência')}</span>
-          ${pendenteHtml}
-        </div>
-        <h4>${escaparHtml(item.veiculo || 'Veículo')} · ${escaparHtml(item.placa || '')}</h4>
-        <p><strong>Motorista:</strong> ${escaparHtml(item.motorista || item.colaboradorNome || 'Não informado')}<br><strong>Local:</strong> ${escaparHtml(item.localizacao || 'Não informado')} ${linkMapa}</p>
-        <p>${escaparHtml(item.descricao || '')}</p>
-        ${item.envolvidos ? `<p><strong>Envolvidos:</strong> ${escaparHtml(item.envolvidos)}</p>` : ''}
-        <p><strong>Providências:</strong> ${escaparHtml(item.providencias || 'Não informadas')}</p>
-        ${fotosHtml}
-        <small>Registrado por ${escaparHtml(item.colaboradorNome || 'Colaborador')} · ${dataHora}</small>
-      </div>
-      <div class="occurrence-record-actions">${acoesAdmin}</div>
-    `;
-    occurrenceList.appendChild(card);
-  });
-}
-
-function iniciarModuloOcorrencias() {
-  if (!currentUserData?.uid || !occurrenceList) return;
-  encerrarOuvinteOcorrencias();
-  prepararFormularioOcorrencia();
-
-  const referencia = currentUserData.role === 'admin'
-    ? collection(db, 'ocorrencias')
-    : query(collection(db, 'ocorrencias'), where('colaboradorUid', '==', currentUserData.uid));
-
-  cancelarOuvinteOcorrencias = onSnapshot(referencia, { includeMetadataChanges: true }, (snapshot) => {
-    ocorrenciasCache = snapshot.docs.map((documento) => ({
-      id: documento.id,
-      ...documento.data(),
-      pendenteSincronizacao: documento.metadata.hasPendingWrites
-    }));
-    renderizarOcorrencias();
-  }, (error) => {
-    console.error('Erro ao acompanhar ocorrências:', error);
-    occurrenceList.innerHTML = '<p class="occurrence-list-empty">Não foi possível carregar as ocorrências.</p>';
-  });
-}
-
-if (occurrenceLocationButton) {
-  occurrenceLocationButton.addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      Swal.fire({ icon: 'info', title: 'Localização indisponível', text: 'Digite o endereço ou local manualmente.', confirmButtonColor: '#0F172A' });
-      return;
-    }
-
-    occurrenceLocationButton.disabled = true;
-    if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Obtendo localização do aparelho...';
-    navigator.geolocation.getCurrentPosition((posicao) => {
-      const latitude = Number(posicao.coords.latitude).toFixed(6);
-      const longitude = Number(posicao.coords.longitude).toFixed(6);
-      occurrenceLatitude.value = latitude;
-      occurrenceLongitude.value = longitude;
-      if (!occurrenceLocation.value.trim()) occurrenceLocation.value = `Coordenadas ${latitude}, ${longitude}`;
-      if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Localização capturada. Você pode complementar o endereço acima.';
-      occurrenceLocationButton.disabled = false;
-    }, () => {
-      if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Não foi possível obter a localização. Informe o local manualmente.';
-      occurrenceLocationButton.disabled = false;
-    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
-  });
-}
-
-if (occurrenceForm) {
-  occurrenceForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!currentUserData?.uid) return;
-
-    let files = Array.from(occurrencePhotos?.files || []);
-    if (files.length > 10) {
-      Swal.fire({ icon: 'warning', title: 'Limite de fotos excedido', text: 'Selecione no máximo 10 imagens.', confirmButtonColor: '#0F172A' });
-      return;
-    }
-
-    if (!navigator.onLine && files.length > 0) {
-      const resposta = await Swal.fire({
-        icon: 'info',
-        title: 'Fotos precisam de conexão',
-        text: 'Você pode guardar o registro agora sem as fotos ou cancelar e tentar novamente quando a internet voltar.',
-        showCancelButton: true,
-        confirmButtonText: 'Registrar sem fotos',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#0F172A'
-      });
-      if (!resposta.isConfirmed) return;
-      files = [];
-    }
-
-    occurrenceSubmit.disabled = true;
-    atualizarConteudoBotao(occurrenceSubmit, navigator.onLine ? 'Registrando...' : 'Preparando sincronização...', 'check');
-
-    try {
-      const fotos = files.length ? await fazerUploadImagens(files) : [];
-      const data = occurrenceDate.value;
-      const hora = occurrenceTime.value;
-      const ocorridoEm = Timestamp.fromDate(new Date(`${data}T${hora}:00`));
-      const dados = {
-        tipo: occurrenceType.value,
-        data,
-        hora,
-        ocorridoEm,
-        motorista: occurrenceDriver.value.trim(),
-        veiculo: occurrenceVehicle.value.trim(),
-        placa: occurrencePlate.value.trim().toUpperCase(),
-        localizacao: occurrenceLocation.value.trim(),
-        latitude: occurrenceLatitude.value ? Number(occurrenceLatitude.value) : null,
-        longitude: occurrenceLongitude.value ? Number(occurrenceLongitude.value) : null,
-        envolvidos: occurrenceInvolved.value.trim(),
-        descricao: occurrenceDescription.value.trim(),
-        providencias: occurrenceActions.value.trim(),
-        fotos,
-        status: 'Aberta',
-        colaboradorUid: currentUserData.uid,
-        colaboradorNome: currentUserData.nome || currentUserData.email || 'Colaborador',
-        criadoEm: serverTimestamp(),
-        atualizadoEm: serverTimestamp()
-      };
-
-      const salvamento = addDoc(collection(db, 'ocorrencias'), dados);
-      if (navigator.onLine) {
-        await salvamento;
-        Toast.fire({ icon: 'success', title: 'Ocorrência registrada.' });
-      } else {
-        salvamento.catch((error) => console.error('Erro ao sincronizar ocorrência:', error));
-        Toast.fire({ icon: 'info', title: 'Ocorrência aguardando conexão.' });
-      }
-
-      occurrenceForm.reset();
-      occurrenceLatitude.value = '';
-      occurrenceLongitude.value = '';
-      if (occurrenceLocationStatus) occurrenceLocationStatus.textContent = 'Você também pode informar o local manualmente.';
-      prepararFormularioOcorrencia();
-    } catch (error) {
-      Swal.fire({ icon: 'error', title: 'Não foi possível registrar', text: error.message, confirmButtonColor: '#0F172A' });
-    } finally {
-      occurrenceSubmit.disabled = false;
-      atualizarConteudoBotao(occurrenceSubmit, 'Registrar ocorrência', 'check');
-    }
-  });
-}
-
-if (occurrenceStatusFilter) occurrenceStatusFilter.addEventListener('change', renderizarOcorrencias);
-
-window.atualizarStatusOcorrencia = async (ocorrenciaId, novoStatus) => {
-  if (currentUserData?.role !== 'admin' || !['Aberta', 'Em análise', 'Concluída'].includes(novoStatus)) return;
-  try {
-    await updateDoc(doc(db, 'ocorrencias', ocorrenciaId), {
-      status: novoStatus,
-      atualizadoEm: serverTimestamp(),
-      atualizadoPorUid: currentUserData.uid,
-      atualizadoPorNome: currentUserData.nome || currentUserData.email
-    });
-    await registrarAuditoria('ocorrencia_status_alterado', 'ocorrencias', { ocorrenciaId, status: novoStatus });
-    Toast.fire({ icon: 'success', title: `Ocorrência marcada como ${novoStatus.toLowerCase()}.` });
-  } catch (error) {
-    Swal.fire({ icon: 'error', title: 'Não foi possível atualizar', text: error.message, confirmButtonColor: '#0F172A' });
-  }
-};
 
 // --- MARKETPLACE / FEIRINHA ---
 window.abrirModalNovoAnuncioMarketplace = async () => {
@@ -3047,6 +2365,7 @@ window.confirmarRetiradaEpi = async (solicitacaoId) => {
         ultimaRetiradaEpiEm: serverTimestamp(),
         proximaSolicitacaoEpiEm: proximaSolicitacao
       }, { merge: true });
+
     });
 
     await registrarAuditoria('epi_retirado', 'solicitacoes_epi', {
@@ -5190,8 +4509,6 @@ const COLECOES_BACKUP = [
   'reservas_refeicao',
   'excecoes_refeicao',
   'fechamentos_refeicoes',
-  'manutencoes',
-  'ocorrencias',
   'marketplace',
   'estoque_epi',
   'solicitacoes_epi',
@@ -5294,8 +4611,6 @@ function traduzirAcaoAuditoria(acao) {
     cardapio_excluido: 'Excluiu cardápio',
     aviso_publicado: 'Publicou aviso',
     aviso_excluido: 'Excluiu aviso',
-    manutencao_concluida: 'Concluiu manutenção',
-    ocorrencia_status_alterado: 'Atualizou ocorrência',
     fechamento_refeicao_gerado: 'Gerou fechamento de refeições',
     backup_exportado: 'Exportou backup',
     backup_restaurado: 'Restaurou backup'
@@ -5304,7 +4619,9 @@ function traduzirAcaoAuditoria(acao) {
 
 function renderizarAuditoriaAdmin() {
   if (!auditList) return;
-  const registros = ordenarRegistrosEpi(auditoriaAdminCache).slice(0, 30);
+  const registros = ordenarRegistrosEpi(auditoriaAdminCache)
+    .filter((item) => !['manutencoes', 'ocorrencias'].includes(item.modulo))
+    .slice(0, 30);
   if (registros.length === 0) {
     auditList.innerHTML = '<p class="reports-empty">Nenhuma ação registrada até o momento.</p>';
     return;
@@ -5361,13 +4678,11 @@ async function carregarRelatoriosAdmin() {
   if (reportRefresh) reportRefresh.disabled = true;
 
   try {
-    const [usuariosSnap, reservasSnap, excecoesSnap, solicitacoesSnap, manutencoesSnap, ocorrenciasSnap, movimentacoesSnap, afastamentosSnap] = await Promise.all([
+    const [usuariosSnap, reservasSnap, excecoesSnap, solicitacoesSnap, movimentacoesSnap, afastamentosSnap] = await Promise.all([
       getDocs(collection(db, 'usuarios')),
       getDocs(collection(db, 'reservas_refeicao')),
       getDocs(collection(db, 'excecoes_refeicao')),
       getDocs(collection(db, 'solicitacoes_epi')),
-      getDocs(collection(db, 'manutencoes')),
-      getDocs(collection(db, 'ocorrencias')),
       getDocs(collection(db, 'movimentacoes_epi')),
       getDocs(collection(db, 'afastamentos'))
     ]);
@@ -5380,15 +4695,11 @@ async function carregarRelatoriosAdmin() {
     const excecoes = excecoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.data?.startsWith(mes));
     let refeicoes = combinarRefeicoes(listarDatasDoMes(mes), reservas, excecoes);
     let entregas = solicitacoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.status === 'retirado' && dataPertenceAoMes(item.retiradoEm, mes));
-    let manutencoes = manutencoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => dataPertenceAoMes(item.criadoEm, mes));
-    let ocorrencias = ocorrenciasSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => item.data?.startsWith(mes));
     let movimentacoes = movimentacoesSnap.docs.map((item) => ({ id: item.id, ...item.data() })).filter((item) => dataPertenceAoMes(item.criadoEm, mes));
 
     if (colaboradorUid) {
       refeicoes = refeicoes.filter((item) => item.colaboradorUid === colaboradorUid);
       entregas = entregas.filter((item) => item.colaboradorUid === colaboradorUid);
-      manutencoes = manutencoes.filter((item) => item.colaboradorUid === colaboradorUid);
-      ocorrencias = ocorrencias.filter((item) => item.colaboradorUid === colaboradorUid);
       movimentacoes = movimentacoes.filter((item) => item.colaboradorUid === colaboradorUid);
     }
 
@@ -5402,7 +4713,7 @@ async function carregarRelatoriosAdmin() {
       else resumo.almocos += 1;
     });
     const resumoRefeicoes = [...refeicoesPorColaborador.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-    relatorioAdminCache = { mes, colaboradorUid, refeicoes, resumoRefeicoes, entregas, manutencoes, ocorrencias, movimentacoes };
+    relatorioAdminCache = { mes, colaboradorUid, refeicoes, resumoRefeicoes, entregas, movimentacoes };
     renderizarRelatoriosAdmin();
   } catch (error) {
     console.error('Erro ao preparar relatórios:', error);
@@ -5415,12 +4726,10 @@ async function carregarRelatoriosAdmin() {
 
 function renderizarRelatoriosAdmin() {
   if (!relatorioAdminCache) return;
-  const { refeicoes, resumoRefeicoes, entregas, manutencoes, ocorrencias, movimentacoes } = relatorioAdminCache;
+  const { refeicoes, resumoRefeicoes, entregas, movimentacoes } = relatorioAdminCache;
   if (reportMealsTotal) reportMealsTotal.textContent = refeicoes.length;
   if (reportMealsValue) reportMealsValue.textContent = formatarMoeda(refeicoes.length * PRECO_REFEICAO);
   if (reportEpiDeliveries) reportEpiDeliveries.textContent = entregas.length;
-  if (reportMaintenanceTotal) reportMaintenanceTotal.textContent = manutencoes.length;
-  if (reportOccurrenceTotal) reportOccurrenceTotal.textContent = ocorrencias.length;
   if (reportStockMovements) reportStockMovements.textContent = movimentacoes.length;
 
   if (reportMealsBody) {
@@ -5436,18 +4745,6 @@ function renderizarRelatoriosAdmin() {
     `).join('') : '<p class="reports-empty">Nenhuma entrega no período.</p>';
   }
 
-  if (reportMaintenanceList) {
-    reportMaintenanceList.innerHTML = manutencoes.length ? ordenarRegistrosEpi(manutencoes).map((item) => `
-      <article><strong>${escaparHtml(item.veiculo || 'Veículo')} · ${escaparHtml(item.placa || '')}</strong><span>${escaparHtml(item.tipo || 'Manutenção')}</span><small>${formatarDataHoraEpi(item.criadoEm)} · ${escaparHtml(item.status || 'Pendente')}</small></article>
-    `).join('') : '<p class="reports-empty">Nenhuma manutenção no período.</p>';
-  }
-
-  if (reportOccurrenceList) {
-    reportOccurrenceList.innerHTML = ocorrencias.length ? [...ocorrencias].sort((a, b) => obterDataOcorrencia(b) - obterDataOcorrencia(a)).map((item) => `
-      <article><strong>${escaparHtml(item.veiculo || 'Veículo')} · ${escaparHtml(item.placa || '')}</strong><span>${escaparHtml(item.tipo || 'Ocorrência')}</span><small>${obterDataOcorrencia(item).toLocaleString('pt-BR')} · ${escaparHtml(item.status || 'Aberta')}</small></article>
-    `).join('') : '<p class="reports-empty">Nenhuma ocorrência no período.</p>';
-  }
-
   if (reportStockBody) {
     reportStockBody.innerHTML = movimentacoes.length ? ordenarRegistrosEpi(movimentacoes).map((item) => `
       <tr><td>${formatarDataHoraEpi(item.criadoEm)}</td><td>${escaparHtml(item.nome)}${item.variacao && item.variacao !== 'Único' ? ` · ${escaparHtml(item.variacao)}` : ''}</td><td>${item.tipo === 'entrada' ? 'Entrada' : 'Saída'}</td><td>${Number(item.quantidade) || 0}</td><td>${escaparHtml(item.responsavelNome || 'Administrador')}</td></tr>
@@ -5459,13 +4756,9 @@ function limparInterfaceRelatorios() {
   if (reportMealsTotal) reportMealsTotal.textContent = '0';
   if (reportMealsValue) reportMealsValue.textContent = 'R$ 0,00';
   if (reportEpiDeliveries) reportEpiDeliveries.textContent = '0';
-  if (reportMaintenanceTotal) reportMaintenanceTotal.textContent = '0';
-  if (reportOccurrenceTotal) reportOccurrenceTotal.textContent = '0';
   if (reportStockMovements) reportStockMovements.textContent = '0';
   if (reportMealsBody) reportMealsBody.replaceChildren();
   if (reportEpiList) reportEpiList.replaceChildren();
-  if (reportMaintenanceList) reportMaintenanceList.replaceChildren();
-  if (reportOccurrenceList) reportOccurrenceList.replaceChildren();
   if (reportStockBody) reportStockBody.replaceChildren();
   if (auditList) auditList.replaceChildren();
 }
@@ -5475,8 +4768,6 @@ function exportarRelatorioCsv() {
   const linhas = [['Categoria', 'Data', 'Colaborador', 'Descrição', 'Tipo', 'Quantidade', 'Valor', 'Responsável']];
   relatorioAdminCache.refeicoes.forEach((item) => linhas.push(['Refeição', item.data, item.colaboradorNome, item.tipo === 'janta' ? 'Janta' : 'Almoço', item.recorrente ? 'Permanente' : 'Manual', 1, PRECO_REFEICAO, '']));
   relatorioAdminCache.entregas.forEach((item) => linhas.push(['Entrega de EPI', formatarDataHoraEpi(item.retiradoEm), item.colaboradorNome, (item.itens || []).map((produto) => `${produto.quantidade || 1}x ${produto.nome} ${produto.variacao || ''}`).join(' | '), 'Retirada', item.totalItens || 0, '', item.retiradaConfirmadaPorNome || '']));
-  relatorioAdminCache.manutencoes.forEach((item) => linhas.push(['Manutenção', formatarDataHoraEpi(item.criadoEm), item.colaboradorNome || '', `${item.veiculo || ''} ${item.placa || ''} - ${item.descricao || ''}`, item.status || '', 1, '', '']));
-  relatorioAdminCache.ocorrencias.forEach((item) => linhas.push(['Ocorrência', `${item.data || ''} ${item.hora || ''}`.trim(), item.colaboradorNome || '', `${item.veiculo || ''} ${item.placa || ''} - ${item.descricao || ''}`, item.status || '', 1, '', item.motorista || '']));
   relatorioAdminCache.movimentacoes.forEach((item) => linhas.push(['Movimentação de EPI', formatarDataHoraEpi(item.criadoEm), item.colaboradorNome || '', `${item.nome || ''} ${item.variacao || ''}`, item.tipo || '', item.quantidade || 0, '', item.responsavelNome || '']));
   baixarCsv(`relatorio-administrativo-${relatorioAdminCache.mes}.csv`, linhas);
 }
@@ -5487,17 +4778,13 @@ function gerarRelatorioPdf() {
   const colaborador = reportUser?.selectedOptions?.[0]?.textContent || 'Todos os colaboradores';
   const tabelaRefeicoes = dados.resumoRefeicoes.map((item) => `<tr><td>${escaparHtml(item.nome)}</td><td>${item.almocos}</td><td>${item.jantas}</td><td>${item.almocos + item.jantas}</td><td>${formatarMoeda((item.almocos + item.jantas) * PRECO_REFEICAO)}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
   const tabelaEntregas = dados.entregas.map((item) => `<tr><td>${formatarDataHoraEpi(item.retiradoEm)}</td><td>${escaparHtml(item.colaboradorNome)}</td><td>${escaparHtml((item.itens || []).map((produto) => `${produto.quantidade || 1}x ${produto.nome} ${produto.variacao || ''}`).join(', '))}</td><td>${item.entregaConfirmada ? 'Confirmado' : 'Pendente'}</td></tr>`).join('') || '<tr><td colspan="4">Nenhum registro</td></tr>';
-  const tabelaManutencoes = dados.manutencoes.map((item) => `<tr><td>${formatarDataHoraEpi(item.criadoEm)}</td><td>${escaparHtml(item.veiculo || '')}</td><td>${escaparHtml(item.placa || '')}</td><td>${escaparHtml(item.tipo || '')}</td><td>${escaparHtml(item.status || '')}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
-  const tabelaOcorrencias = dados.ocorrencias.map((item) => `<tr><td>${escaparHtml(`${item.data || ''} ${item.hora || ''}`.trim())}</td><td>${escaparHtml(item.motorista || item.colaboradorNome || '')}</td><td>${escaparHtml(item.veiculo || '')}</td><td>${escaparHtml(item.tipo || '')}</td><td>${escaparHtml(item.status || '')}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
   const tabelaMovimentos = dados.movimentacoes.map((item) => `<tr><td>${formatarDataHoraEpi(item.criadoEm)}</td><td>${escaparHtml(item.nome || '')}</td><td>${escaparHtml(item.variacao || '')}</td><td>${item.tipo === 'entrada' ? 'Entrada' : 'Saída'}</td><td>${item.quantidade || 0}</td></tr>`).join('') || '<tr><td colspan="5">Nenhum registro</td></tr>';
   abrirDocumentoImpressao(`Relatório ${dados.mes}`, `
     <header class="document-header"><div><span>T&amp;T Transportes</span><h1>Relatório administrativo mensal</h1></div><strong>${escaparHtml(dados.mes)}</strong></header>
     <section class="document-info"><p><b>Filtro:</b> ${escaparHtml(colaborador)}</p><p><b>Gerado em:</b> ${new Date().toLocaleString('pt-BR')}</p></section>
-    <div class="report-kpis"><div>Refeições<strong>${dados.refeicoes.length}</strong></div><div>Gasto<strong>${formatarMoeda(dados.refeicoes.length * PRECO_REFEICAO)}</strong></div><div>Entregas de EPI<strong>${dados.entregas.length}</strong></div><div>Manutenções<strong>${dados.manutencoes.length}</strong></div><div>Ocorrências<strong>${dados.ocorrencias.length}</strong></div></div>
+    <div class="report-kpis"><div>Refeições<strong>${dados.refeicoes.length}</strong></div><div>Gasto<strong>${formatarMoeda(dados.refeicoes.length * PRECO_REFEICAO)}</strong></div><div>Entregas de EPI<strong>${dados.entregas.length}</strong></div><div>Movimentações de estoque<strong>${dados.movimentacoes.length}</strong></div></div>
     <section class="report-section"><h2>Refeições</h2><table><thead><tr><th>Colaborador</th><th>Almoços</th><th>Jantas</th><th>Total</th><th>Valor</th></tr></thead><tbody>${tabelaRefeicoes}</tbody></table></section>
     <section class="report-section"><h2>Entregas de EPI</h2><table><thead><tr><th>Data</th><th>Colaborador</th><th>Itens</th><th>Confirmação</th></tr></thead><tbody>${tabelaEntregas}</tbody></table></section>
-    <section class="report-section"><h2>Manutenções</h2><table><thead><tr><th>Data</th><th>Veículo</th><th>Placa</th><th>Tipo</th><th>Status</th></tr></thead><tbody>${tabelaManutencoes}</tbody></table></section>
-    <section class="report-section"><h2>Acidentes e ocorrências</h2><table><thead><tr><th>Data</th><th>Motorista</th><th>Veículo</th><th>Tipo</th><th>Status</th></tr></thead><tbody>${tabelaOcorrencias}</tbody></table></section>
     <section class="report-section"><h2>Movimentações de estoque</h2><table><thead><tr><th>Data</th><th>Item</th><th>Tamanho</th><th>Tipo</th><th>Qtd.</th></tr></thead><tbody>${tabelaMovimentos}</tbody></table></section>
   `);
 }

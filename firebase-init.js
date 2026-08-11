@@ -3,7 +3,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getMessaging } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
-import { firebaseConfig, appCheckSiteKey } from "./firebase-config.js";
+import { firebaseConfig, appCheckSiteKey } from "./firebase-config.js?v=20260811-3";
 
 // Inicializa o Firebase
 export const app = initializeApp(firebaseConfig);

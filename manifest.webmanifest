@@ -1,7 +1,7 @@
 {
   "name": "T&T Transportes - Portal Corporativo",
   "short_name": "T&T Portal",
-  "description": "Portal corporativo da T&T Transportes para refeições, EPIs, manutenção e ocorrências.",
+  "description": "Portal corporativo da T&T Transportes para refeições, EPIs, avisos e serviços internos.",
   "id": "/",
   "start_url": "/?origem=pwa",
   "scope": "/",
@@ -20,12 +20,6 @@
       "name": "Reservar refeição",
       "short_name": "Refeições",
       "url": "/?secao=refeicoes",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Registrar ocorrência",
-      "short_name": "Ocorrências",
-      "url": "/?secao=ocorrencias",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]

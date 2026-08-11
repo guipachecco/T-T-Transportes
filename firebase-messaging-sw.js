@@ -1,21 +1,21 @@
 // firebase-messaging-sw.js
-const CACHE_APLICATIVO = 'tt-portal-v20260810-5';
+const CACHE_APLICATIVO = 'tt-portal-v20260811-3';
 const ARQUIVOS_APLICATIVO = [
   '/',
   '/index.html',
-  '/manifest.webmanifest',
-  '/style.css',
-  '/app.js',
-  '/pwa.js',
-  '/firebase-config.js',
-  '/firebase-init.js',
-  '/notificacoes.js',
-  '/imagens.js',
-  '/sweetalert2.all.min.js',
+  '/manifest.webmanifest?v=20260811-3',
+  '/style.css?v=20260811-3',
+  '/app.js?v=20260811-3',
+  '/pwa.js?v=20260811-3',
+  '/firebase-config.js?v=20260811-3',
+  '/firebase-init.js?v=20260811-3',
+  '/notificacoes.js?v=20260811-3',
+  '/imagens.js?v=20260811-3',
+  '/sweetalert2.all.min.js?v=20260807-11',
   '/logo.jpeg',
-  '/favicon.png',
-  '/favicon.ico',
-  '/apple-touch-icon.png',
+  '/favicon.png?v=20260811-3',
+  '/favicon.ico?v=20260811-3',
+  '/apple-touch-icon.png?v=20260811-3',
   '/icon-192.png',
   '/icon-512.png'
 ];
